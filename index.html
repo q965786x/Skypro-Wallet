@@ -5,8 +5,61 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>skypro-wallet</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700&display=swap">
   </head>
   <body>
+    <!-- Форма входа -->
+    <div class="form-login" id="formLogin">        
+      <div class="form-login-container">
+          <h2 class="form-title">Вход</h2>
+                    
+          <div class="form-group">
+              <label class="form-label" for="loginEmail">Эл. почта</label>
+              <input type="email" id="loginEmail" class="form-input" placeholder="Введите вашу почту">
+          </div>
+          
+          <div class="form-group">
+              <label class="form-label" for="loginPassword">Пароль</label>
+              <input type="password" id="loginPassword" class="form-input" placeholder="Введите ваш пароль">
+          </div>
+          
+          <button type="button" class="btn-login" id="loginBtn">Войти</button>
+          
+          <div class="form-link">
+              <p class="auth-link" id="goToRegister">Нужно зарегистрироваться? Регистрируйтесь здесь</p>
+          </div>
+      </div>
+    </div>
+        
+    <!-- Форма регистрации -->
+    <div class="form-register" id="formRegister">   
+        <div class="form-register-container">
+            <h2 class="form-title">Регистрация</h2>          
+            
+            <div class="form-group">
+                <label class="form-label" for="registerEmail">Эл. почта</label>
+                <input type="email" id="registerEmail" class="form-input" placeholder="Введите вашу почту">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="registerPassword">Пароль</label>
+                <input type="password" id="registerPassword" class="form-input" placeholder="Создайте пароль">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">Подтвердите пароль</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Повторите пароль">
+            </div>
+            
+            <button type="button" class="btn btn-register" id="registerBtn">Зарегистрироваться</button>
+            
+            <div class="form-link">
+              <p class="auth-link" id="goToRegister">Уже есть аккаунт? Войдите здесь</p>
+          </div>
+        </div>
+    </div>
+
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
