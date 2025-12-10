@@ -1,3 +1,8 @@
+Создан репозиторий Skypro-Wallet.
+Был установлен инструмент Vite, который собрал базовый React-проектю
+В проект были установлены библиотеки: react-router-dom - для маршрутизации, axios - для интеграции с API, Prettier, линтер Eslint.
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
