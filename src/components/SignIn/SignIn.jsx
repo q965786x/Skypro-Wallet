@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { SHeader, SLogo, SLogoImg } from "../Header/Header.styled.js";
 import {
+  SFormWrapper,
   SFormLogin,
   SFormLoginContainer,
   SFormTitle,
@@ -9,36 +12,73 @@ import {
   SBtnLogin,
   SFormLink,
   SAuthLink,
-} from "./SignIn.styled";
+} from "./SignIn.styled.js";
 
-<SFormLogin>
-  <SFormLoginContainer>
-    <SFormTitle>Вход</SFormTitle>
+const SignIn = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-    <SFormGroup>
-      <SFormLabel>Эл. почта</SFormLabel>
-      <SFormInput
-        type="email"
-        id="loginEmail"
-        className="form-input"
-        placeholder="Введите вашу почту"
-      />
-    </SFormGroup>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Простая проверка - если заполнены оба поля
+    if (email && password) {
+      navigate("/expenses");
+    } else {
+      alert("Пожалуйста, заполните все поля");
+    }
+  };
 
-    <SFormGroup>
-      <SFormLabel>Пароль</SFormLabel>
-      <SFormInput
-        type="password"
-        id="loginPassword"
-        className="form-input"
-        placeholder="Введите ваш пароль"
-      />
-    </SFormGroup>
+  return (
+    <div className="auth-page">
+      <SHeader>
+        <SLogo as={Link} to="/">
+          <SLogoImg src="/images/logo.png" alt="logo" />
+        </SLogo>
+      </SHeader>
 
-    <SBtnLogin>Войти</SBtnLogin>
+      <SFormWrapper>
+        <SFormLogin>
+          <SFormLoginContainer>
+            <SFormTitle>Вход</SFormTitle>
+            <form onSubmit={handleSubmit}>
+              <SFormGroup>
+                <SFormLabel htmlFor="email"></SFormLabel>
+                <SFormInput
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Эл. почта"
+                  required
+                />
+              </SFormGroup>
 
-    <SFormLink>
-      <SAuthLink>Нужно зарегистрироваться? Регистрируйтесь здесь</SAuthLink>
-    </SFormLink>
-  </SFormLoginContainer>
-</SFormLogin>;
+              <SFormGroup>
+                <SFormLabel htmlFor="password"></SFormLabel>
+                <SFormInput
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Введите ваш пароль"
+                  required
+                />
+              </SFormGroup>
+
+              <SBtnLogin type="submit">Войти</SBtnLogin>
+            </form>
+
+            <SFormLink>
+              <SAuthLink as={Link} to="/sign-up">
+                Нужно зарегистрироваться? Регистрируйтесь здесь
+              </SAuthLink>
+            </SFormLink>
+          </SFormLoginContainer>
+        </SFormLogin>
+      </SFormWrapper>
+    </div>
+  );
+};
+
+export default SignIn;

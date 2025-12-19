@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { SHeader, SLogo, SLogoImg } from "../Header/Header.styled.js";
 import {
+  SFormWrapper,
   SFormRegister,
   SFormRegisterContainer,
   SFormTitle,
@@ -9,46 +12,89 @@ import {
   SBtnRegister,
   SFormLink,
   SAuthLink,
-} from "./SignUp.styled";
+} from "./SignUp.styled.js";
 
-<SFormRegister>
-  <SFormRegisterContainer>
-    <SFormTitle>Регистрация</SFormTitle>
+const SignUp = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    <SFormGroup>
-      <SFormLabel>Эл. почта</SFormLabel>
-      <SFormInput
-        type="email"
-        id="registerEmail"
-        className="form-input"
-        placeholder="Введите вашу почту"
-      />
-    </SFormGroup>
+  const navigate = useNavigate();
 
-    <SFormGroup>
-      <SFormLabel>Пароль</SFormLabel>
-      <SFormInput
-        type="password"
-        id="registerPassword"
-        className="form-input"
-        placeholder="Создайте пароль"
-      />
-    </SFormGroup>
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-    <SFormGroup>
-      <SFormLabel>Подтвердите пароль</SFormLabel>
-      <SFormInput
-        type="password"
-        id="confirmPassword"
-        className="form-input"
-        placeholder="Повторите пароль"
-      />
-    </SFormGroup>
+    if (!name || !email || !password) {
+      alert("Пожалуйста, заполните все поля");
+      return;
+    }
 
-    <SBtnRegister>Зарегистрироваться</SBtnRegister>
+    // Простая регистрация
+    navigate("/expenses");
+  };
 
-    <SFormLink>
-      <SAuthLink>Уже есть аккаунт? Войдите здесь</SAuthLink>
-    </SFormLink>
-  </SFormRegisterContainer>
-</SFormRegister>;
+  return (
+    <div className="auth-page">
+      <SHeader>
+        <SLogo as={Link} to="/">
+          <SLogoImg src="/images/logo.png" alt="logo" />
+        </SLogo>
+      </SHeader>
+
+      <SFormWrapper>
+        <SFormRegister>
+          <SFormRegisterContainer>
+            <SFormTitle>Регистрация</SFormTitle>
+            <form onSubmit={handleSubmit}>
+              <SFormGroup>
+                <SFormLabel htmlFor="name"></SFormLabel>
+                <SFormInput
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Имя"
+                  required
+                />
+              </SFormGroup>
+
+              <SFormGroup>
+                <SFormLabel htmlFor="email"></SFormLabel>
+                <SFormInput
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Эл. почту"
+                  required
+                />
+              </SFormGroup>
+
+              <SFormGroup>
+                <SFormLabel htmlFor="password"></SFormLabel>
+                <SFormInput
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Введите ваш пароль"
+                  required
+                />
+              </SFormGroup>
+
+              <SBtnRegister type="submit">Зарегистрироваться</SBtnRegister>
+            </form>
+
+            <SFormLink>
+              <SAuthLink as={Link} to="/sign-in">
+                Уже есть аккаунт? Войдите здесь
+              </SAuthLink>
+            </SFormLink>
+          </SFormRegisterContainer>
+        </SFormRegister>
+      </SFormWrapper>
+    </div>
+  );
+};
+
+export default SignUp;
