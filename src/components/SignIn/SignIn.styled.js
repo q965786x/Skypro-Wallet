@@ -1,5 +1,14 @@
 import styled from "styled-components";
 
+export const SFormWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px); /* Учитываем высоту header */
+  padding: 20px;
+`;
+
 export const SFormLogin = styled.div`
   width: 379px;
   height: 334px;
@@ -43,8 +52,8 @@ export const SFormInput = styled.input`
   padding: 0 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 16px;
-  color: #ffffff;
+  font-size: 14px;
+  color: #000000;
   transition: all 0.3s ease;
   background-color: #fff;
   gap: 12px;
@@ -62,21 +71,26 @@ export const SFormInput = styled.input`
 `;
 
 export const SBtnLogin = styled.button`
+  width: 100%;
+  height: 38px;
   background-color: #7334ea;
+  border: none;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 12px;
-  align-items: center;
+  font-size: 14px;
   color: #ffffff;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-bottom: 24px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #5a2bb8;
+  }
 `;
 
 export const SFormLink = styled.div`
   text-align: center;
-  color: #999999;
-  font-weight: 400;
-  font-size: 12px;
-  font-family: inherit;
-  gap: 10px;
 `;
 
 export const SAuthLink = styled.p`
@@ -85,6 +99,7 @@ export const SAuthLink = styled.p`
   font-weight: 400;
   font-size: 12px;
   font-family: inherit;
+  cursor: pointer;
 
   &:hover {
     text-decoration: underline;
