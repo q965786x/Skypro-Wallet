@@ -1,49 +1,88 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import SignIn from "./SignIn/SignIn";
-import SignUp from "./SignUp/SignUp";
+import { useAuth } from "../context/AuthContext";
+import SignInPage from "../pages/SignInPage";
+import SignUpPage from "../pages/SignUpPage";
 import Main from "./Main/Main";
 import Cost from "./Cost/Cost";
 import Header from "./Header/Header";
 
 function AppRoutes() {
+  const { token, isCheckingAuth } = useAuth();
+
+  if (isCheckingAuth) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        Загрузка...
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Публичные маршруты */}
-      <Route path="/sign-in" element={<SignIn />} />
-      <Route path="/sign-up" element={<SignUp />} />
+      <Route
+        path="/sign-in"
+        element={token ? <Navigate to="/expenses" /> : <SignInPage />}
+      />
+      <Route
+        path="/sign-up"
+        element={token ? <Navigate to="/expenses" /> : <SignUpPage />}
+      />
 
-      {/* Защищенные маршруты (с Header) */}
+      {/* Защищенные маршруты */}
       <Route
         path="/"
         element={
-          <>
-            <Header />
-            <Main />
-          </>
+          token ? (
+            <>
+              <Header />
+              <Main />
+            </>
+          ) : (
+            <Navigate to="/sign-in" />
+          )
         }
       />
       <Route
         path="/expenses"
         element={
-          <>
-            <Header />
-            <Main />
-          </>
+          token ? (
+            <>
+              <Header />
+              <Main />
+            </>
+          ) : (
+            <Navigate to="/sign-in" />
+          )
         }
       />
       <Route
         path="/analysis"
         element={
-          <>
-            <Header />
-            <Cost />
-          </>
+          token ? (
+            <>
+              <Header />
+              <Cost />
+            </>
+          ) : (
+            <Navigate to="/sign-in" />
+          )
         }
       />
 
-      {/* Перенаправление по умолчанию */}
-      <Route path="*" element={<Navigate to="/sign-in" />} />
+      {/* Перенаправление */}
+      <Route
+        path="*"
+        element={<Navigate to={token ? "/expenses" : "/sign-in"} />}
+      />
     </Routes>
   );
 }

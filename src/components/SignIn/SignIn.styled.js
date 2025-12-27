@@ -1,11 +1,12 @@
-import styled from "styled-components";
+// Все данные перенесены в файл Auth.styled.js
+/*import styled from "styled-components";
 
 export const SFormWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 64px); /* Учитываем высоту header */
+  min-height: calc(100vh - 64px); 
   padding: 20px;
 `;
 
@@ -46,11 +47,18 @@ export const SFormLabel = styled.label`
   font-weight: 400;
 `;
 
+export const SErrorMessage = styled.div`
+  color: #ff4444;
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 16px;
+`;
+
 export const SFormInput = styled.input`
   width: 100%;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid #ccc;
+  border: 1px solid ${props => props.className?.includes('error') ? '#ff4444' : '#ccc'};
   border-radius: 6px;
   font-size: 14px;
   color: #000000;
@@ -67,6 +75,12 @@ export const SFormInput = styled.input`
   &.filled {
     color: #000;
     border-color: #888;
+  }
+
+  &:focus {
+    border-color: ${props => props.className?.includes('error') ? '#ff4444' : '#7334ea'};
+    outline: none;
+    box-shadow: 0 0 0 2px ${props => props.className?.includes('error') ? 'rgba(255, 68, 68, 0.1)' : 'rgba(115, 52, 234, 0.1)'};
   }
 `;
 
@@ -104,4 +118,4 @@ export const SAuthLink = styled.p`
   &:hover {
     text-decoration: underline;
   }
-`;
+`;*/

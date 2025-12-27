@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   SHeader,
   SHeaderContent,
@@ -12,12 +13,15 @@ import {
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
   const isExpensesPage = location.pathname === "/expenses";
   const isAnalysisPage = location.pathname === "/analysis";
 
   const handleLogout = () => {
-    // Простой выход - перенаправляем на страницу входа
-    window.location.href = "/sign-in";
+    logout();
+    navigate("/sign-in");
   };
 
   return (
