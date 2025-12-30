@@ -26,64 +26,37 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      {/* Публичные маршруты */}
-      <Route
-        path="/sign-in"
-        element={token ? <Navigate to="/expenses" /> : <SignInPage />}
-      />
-      <Route
-        path="/sign-up"
-        element={token ? <Navigate to="/expenses" /> : <SignUpPage />}
-      />
+    <>
+      {token && <Header />}
+      <Routes>
+        {/* Публичные маршруты */}
+        <Route
+          path="/sign-in"
+          element={token ? <Navigate to="/expenses" /> : <SignInPage />}
+        />
+        <Route
+          path="/sign-up"
+          element={token ? <Navigate to="/expenses" /> : <SignUpPage />}
+        />
 
-      {/* Защищенные маршруты */}
-      <Route
-        path="/"
-        element={
-          token ? (
-            <>
-              <Header />
-              <Main />
-            </>
-          ) : (
-            <Navigate to="/sign-in" />
-          )
-        }
-      />
-      <Route
-        path="/expenses"
-        element={
-          token ? (
-            <>
-              <Header />
-              <Main />
-            </>
-          ) : (
-            <Navigate to="/sign-in" />
-          )
-        }
-      />
-      <Route
-        path="/analysis"
-        element={
-          token ? (
-            <>
-              <Header />
-              <Cost />
-            </>
-          ) : (
-            <Navigate to="/sign-in" />
-          )
-        }
-      />
+        {/* Защищенные маршруты */}
+        <Route path="/" element={<Navigate to="/expenses" />} />
+        <Route
+          path="/expenses"
+          element={token ? <Main /> : <Navigate to="/sign-in" />}
+        />
+        <Route
+          path="/analysis"
+          element={token ? <Cost /> : <Navigate to="/sign-in" />}
+        />
 
-      {/* Перенаправление */}
-      <Route
-        path="*"
-        element={<Navigate to={token ? "/expenses" : "/sign-in"} />}
-      />
-    </Routes>
+        {/* Перенаправление */}
+        <Route
+          path="*"
+          element={<Navigate to={token ? "/expenses" : "/sign-in"} />}
+        />
+      </Routes>
+    </>
   );
 }
 

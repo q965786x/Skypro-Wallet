@@ -4,6 +4,7 @@ import React, {
   useRef,
   useCallback,
   useContext,
+  useMemo,
 } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
@@ -41,9 +42,9 @@ import {
 const Cost = () => {
   const { token } = useAuth();
   const {
-    transactions: allTransactions = [],
     isLoading,
     refetchTransactions,
+    transactions: allTransactions,
   } = useContext(TransactionsContext);
 
   // Состояние для выбранного дня (по умолчанию сегодня)
@@ -53,11 +54,15 @@ const Cost = () => {
   // Состояния для календаря
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [transactions, setTransactions] = useState([]);
   const calendarContentRef = useRef(null);
 
-  //console.log("📊 Cost.jsx - Всего транзакций:", allTransactions?.length);
-  //console.log("🔍 Cost.jsx - allTransactions:", allTransactions);
+  // Отладочный вывод
+  useEffect(() => {
+    console.log(
+      "📊 Cost.jsx: Все транзакций из контекста:",
+      allTransactions?.length
+    );
+  }, [allTransactions]);
 
   const weekdays = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
   const monthNames = [
@@ -75,32 +80,99 @@ const Cost = () => {
     "Декабрь",
   ];
 
-  const parseTransactionDate = (dateStr) => {
-    if (!dateStr) return new Date();
+  // Функция для парсинга даты транзакции
+  const parseTransactionDate = useCallback((dateStr) => {
+    if (!dateStr) return null;
 
     try {
-      // 1. Пробуем формат из API (MM-DD-YYYY)
-      if (dateStr.includes("-")) {
-        const [month, day, year] = dateStr.split("-").map(Number);
-        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-          return new Date(year, month - 1, day);
-        }
-      }
-
-      // 2. Пробуем стандартный парсинг
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-
-      return new Date();
+      // API возвращает даты в формате "2025-12-29T00:00:00.000Z"
+      return new Date(dateStr);
     } catch (error) {
-      //console.error("Ошибка парсинга даты:", dateStr, error);
-      return new Date();
+      console.error("Ошибка парсинга даты:", dateStr);
+      return null;
     }
-  };
+  }, []);
 
-  // Функция для расчета данных по категориям
+  // Функция для получения недели
+  const getWeekRange = useCallback((date) => {
+    const currentDate = new Date(date);
+    const dayOfWeek = currentDate.getDay();
+
+    const monday = new Date(currentDate);
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(currentDate.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    return { monday, sunday };
+  }, []);
+
+  // Функция для фильтрации транзакций по периоду
+  const getTransactionsForPeriod = useCallback(
+    (startDate, endDate) => {
+      if (!allTransactions || allTransactions.length === 0) {
+        return [];
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      console.log("📅 Фильтрация транзакций:", {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        allTransactions: allTransactions.length,
+      });
+
+      const filtered = allTransactions.filter((transaction) => {
+        try {
+          const transactionDate = parseTransactionDate(transaction.date);
+          if (!transactionDate) return false;
+
+          return transactionDate >= start && transactionDate <= end;
+        } catch (error) {
+          console.error("Ошибка фильтрации транзакции:", transaction, error);
+          return false;
+        }
+      });
+
+      console.log("📅 Отфильтровано:", filtered.length, "транзакций");
+      return filtered;
+    },
+    [allTransactions, parseTransactionDate]
+  );
+
+  // Получаем транзакции для выбранного периода
+  const transactionsForSelectedPeriod = useMemo(() => {
+    if (!selectedDay || !allTransactions || allTransactions.length === 0) {
+      console.log("📅 Нет данных для фильтрации");
+      return [];
+    }
+
+    let startDate, endDate;
+
+    if (isWeeklyView) {
+      const { monday, sunday } = getWeekRange(selectedDay);
+      startDate = monday;
+      endDate = sunday;
+    } else {
+      startDate = new Date(selectedDay);
+      endDate = new Date(selectedDay);
+      endDate.setHours(23, 59, 59, 999);
+    }
+
+    return getTransactionsForPeriod(startDate, endDate);
+  }, [
+    selectedDay,
+    isWeeklyView,
+    allTransactions,
+    getWeekRange,
+    getTransactionsForPeriod,
+  ]);
+
+  // Функция для расчета данных по категориям для диаграммы
   const calculateCategoryData = useCallback((transactionsForPeriod) => {
     const categoryMap = {
       food: "Еда",
@@ -123,15 +195,14 @@ const Cost = () => {
     // Считаем сумму по категориям
     const categorySums = {};
 
+    // API возвращает массив транзакций напрямую
     transactionsForPeriod.forEach((transaction) => {
-      // Получаем русское название категории
       const russianCategory = categoryMap[transaction.category] || "Другое";
       categorySums[russianCategory] =
         (categorySums[russianCategory] || 0) + transaction.sum;
     });
 
-    // Преобразуем в массив для отображения
-    // ВАЖНО: возвращаем ВСЕ категории, даже если сумма 0
+    // Возвращаем все категории
     return Object.keys(categoryMap).map((key) => {
       const categoryName = categoryMap[key];
       return {
@@ -142,127 +213,29 @@ const Cost = () => {
     });
   }, []);
 
-  // Функция для получения суммы расходов за день
-  const getExpenseForDay = useCallback(
-    (year, month, day) => {
-      if (!allTransactions || allTransactions.length === 0) return 0;
-
-      const targetDate = new Date(year, month, day);
-
-      return allTransactions
-        .filter((transaction) => {
-          if (!transaction.date) return false;
-          const transactionDate = parseTransactionDate(transaction.date);
-
-          return (
-            transactionDate.getDate() === day &&
-            transactionDate.getMonth() === month &&
-            transactionDate.getFullYear() === year
-          );
-        })
-        .reduce(
-          (sum, transaction) => sum + (parseFloat(transaction.sum) || 0),
-          0
-        );
-    },
-    [allTransactions]
-  );
-
-  // Функция для фильтрации транзакций по периоду
-  const filterTransactionsByPeriod = useCallback(
-    (startDate, endDate) => {
-      if (!allTransactions || allTransactions.length === 0) return [];
-
-      return allTransactions.filter((transaction) => {
-        if (!transaction.date) return false;
-
-        const transactionDate = parseTransactionDate(transaction.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        return transactionDate >= start && transactionDate <= end;
-      });
-    },
-    [allTransactions]
-  );
-
-  // Обновляем транзакции при изменении выбранного дня или режима просмотра
-  useEffect(() => {
-    if (!allTransactions || allTransactions.length === 0) {
-      setTransactions([]);
-      return;
-    }
-
-    let startDate, endDate;
-
-    if (isWeeklyView) {
-      const { monday, sunday } = getWeekRange(selectedDay);
-      startDate = monday;
-      endDate = sunday;
-    } else {
-      startDate = new Date(selectedDay);
-      endDate = new Date(selectedDay);
-      endDate.setHours(23, 59, 59, 999);
-    }
-
-    const filteredTransactions = filterTransactionsByPeriod(startDate, endDate);
-    setTransactions(filteredTransactions);
-
-    //console.log(`📊 Отфильтровано ${filteredTransactions.length} транзакций за период`);
-  }, [selectedDay, isWeeklyView, allTransactions, filterTransactionsByPeriod]);
-
   // Генерация дней месяца
-  const generateMonthDays = (year, month) => {
+  const generateMonthDays = useCallback((year, month) => {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = new Date(year, month, 1).getDay();
-
-    // Преобразуем воскресенье (0) в 6, понедельник (1) в 0
     const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
     const days = [];
-
-    // Пустые ячейки в начале месяца
     for (let i = 0; i < startDay; i++) {
       days.push(null);
     }
-
-    // Дни месяца
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
-
     return days;
-  };
-
-  // Функция для получения недели по выбранной дате
-  const getWeekRange = (date) => {
-    const currentDate = new Date(date);
-    const dayOfWeek = currentDate.getDay();
-
-    const monday = new Date(currentDate);
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    monday.setDate(currentDate.getDate() + diff);
-    monday.setHours(0, 0, 0, 0);
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-
-    return { monday, sunday };
-  };
+  }, []);
 
   const isDaySelected = (year, month, day) => {
     const dayDate = new Date(year, month, day);
 
     if (isWeeklyView) {
-      // Режим недели: выделяем все дни недели
       const { monday, sunday } = getWeekRange(selectedDay);
       return dayDate >= monday && dayDate <= sunday;
     } else {
-      // Режим дня: выделяем только конкретный день
       return (
         year === selectedDay.getFullYear() &&
         month === selectedDay.getMonth() &&
@@ -299,6 +272,7 @@ const Cost = () => {
   const handleDayClick = (day, month, year) => {
     if (day) {
       const newDate = new Date(year, month, day);
+      console.log("📅 Выбрана дата:", newDate.toISOString());
       setSelectedDay(newDate);
       setIsWeeklyView(false);
     }
@@ -324,12 +298,31 @@ const Cost = () => {
   };
 
   // Расчет данных для отображения
-  const categories = calculateCategoryData(transactions);
+  const categories = calculateCategoryData(transactionsForSelectedPeriod);
   const totalAmount = categories.reduce(
     (sum, category) => sum + category.amount,
     0
   );
   const maxAmount = Math.max(...categories.map((c) => c.amount), 1);
+
+  // Логирование для отладки
+  useEffect(() => {
+    console.log("📊 Диаграмма данные:", {
+      selectedDay: selectedDay.toISOString(),
+      isWeeklyView,
+      allTransactionsCount: allTransactions?.length || 0,
+      filteredCount: transactionsForSelectedPeriod.length,
+      categories: categories.map((c) => `${c.name}: ${c.amount} ₽`),
+      totalAmount,
+    });
+  }, [
+    selectedDay,
+    isWeeklyView,
+    allTransactions,
+    transactionsForSelectedPeriod,
+    categories,
+    totalAmount,
+  ]);
 
   if (isLoading) {
     return (
@@ -344,7 +337,7 @@ const Cost = () => {
     );
   }
 
-  // Генерация данных для текущего и следующего месяца
+  // Генерируем дни для отображения
   const currentMonthDays = generateMonthDays(currentYear, currentMonth);
 
   let nextMonth = currentMonth + 1;
@@ -359,6 +352,23 @@ const Cost = () => {
     <div className="page">
       <SAnalysisContainer>
         <SAnalysisTitle>Анализ расходов</SAnalysisTitle>
+
+        {/* Отладочная информация */}
+        <div
+          style={{
+            marginBottom: "10px",
+            padding: "8px 12px",
+            background: "#f5f5f5",
+            borderRadius: "6px",
+            fontSize: "12px",
+            color: "#666",
+          }}
+        >
+          Всего транзакций: <strong>{allTransactions?.length || 0}</strong> | За
+          выбранный период:{" "}
+          <strong>{transactionsForSelectedPeriod.length}</strong> | Сумма:{" "}
+          <strong>{totalAmount.toLocaleString("ru-RU")} ₽</strong>
+        </div>
 
         {/* Кнопки управления */}
         <div
@@ -402,22 +412,41 @@ const Cost = () => {
               За неделю
             </button>
           </div>
-
-          <button
-            onClick={() => refetchTransactions()}
-            style={{
-              padding: "8px 16px",
-              background: "#7334ea",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            Обновить данные
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={() => refetchTransactions()}
+              style={{
+                padding: "8px 16px",
+                background: "#7334ea",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              Обновить данные
+            </button>
+            <button
+              onClick={() => {
+                console.log("🔄 Принудительно синхронизирую...");
+                refetchTransactions();
+              }}
+              style={{
+                padding: "8px 16px",
+                background: "#34c759",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              Синхронизировать
+            </button>
+          </div>
         </div>
 
         <SAnalysisContent>
@@ -611,8 +640,7 @@ const Cost = () => {
                 ))}
 
                 {/* Если транзакций нет, показываем сообщение */}
-                {transactions.length === 0 &&
-                  categories.every((c) => c.amount === 0) && (
+                {transactionsForSelectedPeriod.length === 0 && (
                     <div
                       style={{
                         position: "absolute",

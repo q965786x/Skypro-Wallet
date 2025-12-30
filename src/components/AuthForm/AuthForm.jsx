@@ -135,39 +135,73 @@ const AuthForm = ({ isSignUp }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (isSubmitting) return;
+  if (isSubmitting) return;
 
-    setIsSubmitting(true);
-    setFormError("");
+  setIsSubmitting(true);
+  setFormError("");
 
-    // Валидация всех полей
-    if (!validateAllFields()) {
-      setFormError(
-        "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-      );
-      setIsSubmitting(false);
-      return;
+  // Валидация всех полей
+  if (!validateAllFields()) {
+    setFormError(
+      "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
+    );
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    console.log("🚀 Начинаю авторизацию...");
+
+    const data = isSignUp
+      ? await signUp({
+          name: formData.name,
+          email: formData.email, // Для signUp
+          password: formData.password
+        })
+      : await signIn({
+          login: formData.email, // ИЗМЕНЕНИЕ: используем login вместо email
+          password: formData.password
+        });
+
+        console.log("✅ Авторизация успешна, данные:", data);
+
+    // ВАЖНО: Проверяем, что данные получены корректно
+    if (data && data.user && data.token) {
+      console.log("✅ Вызываю login() с данными:", {
+        user: data.user,
+        tokenLength: data.token.length
+      });
+      
+      // Сохраняем данные через контекст
+      login(data.user, data.token);
+
+      console.log("✅ login() выполнен, переход на /expenses");
+      
+      navigate("/expenses", { replace: true });
+     
+    } else {
+      console.error("❌ Некорректные данные от сервера:", data);
+      throw new Error("Некорректные данные от сервера");
     }
 
-    try {
-      const data = isSignUp
-        ? await signUp(formData)
-        : await signIn({ email: formData.email, password: formData.password });
+  } catch (err) {    
+    console.error("Ошибка авторизации:", err.message);
 
-      if (data) {
-        login(data.user, data.token);
-        navigate("/expenses");
-      }
-    } catch (err) {
-      setFormError(
-        "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setFormError(
+      err.message || "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
+    );
+
+    // ВАЖНО: При ошибке входа очищаем localStorage
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    
+  } finally {
+    console.log("🏁 Завершение обработки авторизации");
+    setIsSubmitting(false);
+  }
+};
 
   // Проверяем, заполнено ли поле и валидно ли оно
   const isFieldFilled = (fieldName) => {

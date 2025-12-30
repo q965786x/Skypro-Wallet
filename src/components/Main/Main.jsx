@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
 import {
@@ -56,8 +56,6 @@ const Main = () => {
     refetchTransactions,
   } = useContext(TransactionsContext);
 
-  //console.log("🎯 Main.jsx РЕНДЕР - транзакций:", transactions?.length);
-
   // Состояния формы
   const [selectedCategory, setSelectedCategory] = useState("Еда");
   const [description, setDescription] = useState("");
@@ -82,108 +80,105 @@ const Main = () => {
 
   // Сортировка транзакций
   const sortedTransactions = useMemo(() => {
-    //console.log("🔄 Сортировка транзакций:", transactions?.length);
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
 
-    if (!transactions || transactions.length === 0) return [];
-
-    return [...transactions].sort((a, b) => {
-      try {
+    try {
+      return [...transactions].sort((a, b) => {
         const dateA = a.date ? new Date(a.date) : new Date(0);
         const dateB = b.date ? new Date(b.date) : new Date(0);
         return dateB - dateA; // новые сверху
-      } catch (e) {
-        //console.error("Ошибка сортировки:", e);
-        return 0;
-      }
-    });
+      });
+    } catch (e) {
+      console.error("❌ Ошибка сортировки:", e);
+      return transactions; // Возвращаем как есть в случае ошибки
+    }
   }, [transactions]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    if (!token) {
-      alert("Вы не авторизованы");
-      return;
-    }
-
-    // Валидация
-    if (!description.trim()) {
-      alert("Введите описание расхода");
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      alert("Введите корректную сумму");
-      return;
-    }
-
-    if (!date) {
-      alert("Выберите дату");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Форматируем дату для API (MM-DD-YYYY)
-      const [year, month, day] = date.split("-");
-      const apiDate = `${parseInt(month)}-${parseInt(day)}-${year}`;
-
-      // Формируем объект транзакции
-      const transactionData = {
-        description: description.trim(),
-        sum: parseFloat(amount),
-        category: CATEGORY_MAPPING[selectedCategory],
-        date: apiDate,
-      };
-
-      //console.log("📤 Отправляю транзакцию:", transactionData);
-
-      // Используем метод из контекста вместо прямого вызова API
-      const success = await addNewTransaction(transactionData);
-
-      if (success) {
-        //console.log("✅ Транзакция успешно добавлена");
-
-        // Обязательно обновляем данные из контекста
-        await refetchTransactions();
-
-        // Очистка формы
-        setDescription("");
-        setDate(new Date().toISOString().split("T")[0]); // Сбрасываем на сегодня
-        setAmount("");
-        setSelectedCategory("Еда");
-
-        alert("Расход успешно добавлен!");
-      } else {
-        alert("Ошибка при добавлении транзакции");
+      if (!token) {
+        alert("Вы не авторизованы");
+        return;
       }
-    } catch (err) {
-      //console.error("❌ Ошибка:", err);
-      alert(err.message || "Ошибка при добавлении транзакции");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Вы уверены, что хотите удалить эту транзакцию?")) {
-      return;
-    }
-
-    try {
-      const success = await removeTransaction(id);
-      if (success) {
-        //console.log("✅ Транзакция удалена");
-        await refetchTransactions();
-      } else {
-        alert("Ошибка при удалении транзакции");
+      // Валидация
+      if (!description.trim() || description.trim().length < 4) {
+        alert("Введите описание расхода (минимум 4 символа)");
+        return;
       }
-    } catch (err) {
-      //console.error("❌ Ошибка:", err);
-      alert(err.message || "Ошибка при удалении транзакции");
-    }
-  };
+
+      if (!amount || parseFloat(amount) <= 0) {
+        alert("Введите корректную сумму");
+        return;
+      }
+
+      if (!date) {
+        alert("Выберите дату");
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        // Форматируем дату для API (MM-DD-YYYY)
+        const [year, month, day] = date.split("-");
+        const apiDate = `${parseInt(month)}-${parseInt(day)}-${year}`;
+
+        // Формируем объект транзакции
+        const transactionData = {
+          description: description.trim(),
+          sum: parseFloat(amount),
+          category: CATEGORY_MAPPING[selectedCategory],
+          date: apiDate,
+        };
+
+        console.log("📤 Main.jsx: Отправляю транзакцию:", transactionData);
+
+        // Используем метод из контекста
+        const success = await addNewTransaction(transactionData);
+
+        if (success) {
+          // Очистка формы
+          setDescription("");
+          setDate(new Date().toISOString().split("T")[0]);
+          setAmount("");
+          setSelectedCategory("Еда");
+          alert("Расход успешно добавлен!");
+        } else {
+          alert("Ошибка при добавлении транзакции");
+        }
+      } catch (err) {
+        console.error("❌ Ошибка:", err);
+        alert(err.message || "Ошибка при добавлении транзакции");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [token, description, amount, date, selectedCategory, addNewTransaction]
+  );
+
+  const handleDelete = useCallback(
+    async (id) => {
+      if (!window.confirm("Вы уверены, что хотите удалить эту транзакцию?")) {
+        return;
+      }
+
+      try {
+        const success = await removeTransaction(id);
+        if (!success) {
+          alert("Ошибка при удалении транзакции");
+        }
+      } catch (err) {
+        console.error("❌ Main.jsx: Ошибка удаления:", err);
+        alert(err.message || "Ошибка при удалении транзакции");
+      }
+    },
+    [removeTransaction]
+  );
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Без даты";
@@ -223,6 +218,21 @@ const Main = () => {
     <div className="page">
       <SMainContainer>
         <SPageTitle>Мои расходы</SPageTitle>
+
+        {/* Отладочная информация */}
+        <div
+          style={{
+            marginBottom: "10px",
+            fontSize: "12px",
+            color: "#666",
+            padding: "8px",
+            background: "#f5f5f5",
+            borderRadius: "4px",
+          }}
+        >
+          Транзакций: {transactions?.length || 0} | Загрузка:{" "}
+          {isLoading ? "Да" : "Нет"} | Ошибка: {error || "Нет"}
+        </div>
 
         <button
           onClick={() => refetchTransactions()}
