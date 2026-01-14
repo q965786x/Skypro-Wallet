@@ -1,5 +1,5 @@
 import React from "react";
-import SignIn from "../components/SignIn/SignIn";
+import SignIn from "../components/SignIn";
 
 const SignInPage = ({ onLogin }) => {
   return <SignIn onLogin={onLogin} />;
