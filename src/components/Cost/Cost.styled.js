@@ -58,28 +58,31 @@ export const SCalendarContainer = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e5e5e7;
 `;
 
 export const SWeekdays = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 4px;
+  margin-bottom: 8px;
   background: #f8f9fa;
-  padding: 8px;
+  padding: 8px 4px;
   border-radius: 6px;
   text-decoration: underline;
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 10;
+  border-bottom: 1px solid #e5e5e7;
 `;
 
 export const SWeekday = styled.div`
   text-align: center;
   font-weight: 400;
   font-size: 12px;
-  color: #666666;
+  color: #999999;
   padding: 6px 0;
   text-transform: uppercase;
 `;
@@ -87,25 +90,20 @@ export const SWeekday = styled.div`
 export const SCalendarContent = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding-right: 8px;
+  padding: 0 4px 8px 4px;
 
   /* Полоса прокрутки */
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
 
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
     background: #c1c1c1;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    border-radius: 2px;
   }
 `;
 
@@ -118,8 +116,8 @@ export const SCalendarWrapper = styled.div`
 `;
 
 export const SMonthHeader = styled.div`
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 400;
+  font-size: 12 px;
   margin-bottom: 16px;
   color: #000000;
   text-align: left;
@@ -139,8 +137,8 @@ export const SDaysContainer = styled.div`
 export const SDays = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
 `;
 
 export const SDay = styled.div`
@@ -148,39 +146,45 @@ export const SDay = styled.div`
   font-weight: 400;
   font-size: 12px;
   color: #000000;
-  padding: 12px 0;
-  border-radius: 50px;
+  padding: 8px 0;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s ease;
-  background: #f4f5f6;
-  border: 1px solid #e5e5e7;
+  transition: all 0.2s ease;
+  background: ${(props) => (props.$selected ? "#F1EBFD" : "#F4F5F6")};
+  border: 1px solid ${(props) => (props.$selected ? "#7334EA" : "#e5e5e7")};
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  margin: 2px;
 
   &:hover {
-    background: #f5f5f7;
-    border-color: #7334ea;
+    background: ${(props) => (props.$selected ? "#F1EBFD" : "#e8e8e8")};
+    border-color: ${(props) => (props.$selected ? "#7334EA" : "#7334ea")};
   }
+`;
 
-  ${({ $active }) =>
-    $active &&
-    ` 
-    background: #7334ea;
-    color: #ffffff;
-    border-color: #7334ea;
-    font-weight: 600;
-  `}
+export const SDayNumber = styled.div`
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  color: ${(props) => (props.$selected ? "#7334EA" : "#000000")};
+  font-weight: 400;
+  font-size: 12px;
 `;
 
 export const SDayEmpty = styled.div`
   height: 40px;
-  padding: 12px 0;
-  border-radius: 6px;
+  padding: 8px 0;
+  border-radius: 50%;
   background: transparent;
   border: 1px solid transparent;
-  cursor: default;
+  margin: 2px;
 `;
 
 export const SDiagramSection = styled.div`
