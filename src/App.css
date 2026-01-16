@@ -119,3 +119,131 @@ body {
   color: #999999;
   font-weight: 400;
 }
+
+/* ==================== АДАПТИВНАЯ ВЕРСТКА ==================== */
+
+/* Планшеты и небольшие экраны */
+@media (max-width: 1024px) {
+  .SMainContainer,
+  .SAnalysisContainer {
+    padding: 64px 20px 20px !important;
+  }
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+  /* Общие стили */
+  html,
+  body {
+    font-size: 14px;
+  }
+
+  /* Хедер */
+  .SHeader {
+    padding: 0 16px !important;
+    height: 56px !important;
+  }
+
+  .SHeaderContent {
+    justify-content: center !important;
+  }
+
+  .SHeaderNav {
+    position: static !important;
+    transform: none !important;
+    gap: 20px !important;
+    margin: 0 16px !important;
+  }
+
+  .SLogoImg {
+    height: 24px !important;
+  }
+
+  .SLogoutBtn {
+    padding: 6px 16px !important;
+    font-size: 12px !important;
+  }
+
+  /* Основной контент */
+  .page {
+    padding-top: 56px !important;
+  }
+
+  .SMainContainer,
+  .SAnalysisContainer {
+    padding: 16px !important;
+  }
+
+  .SPageTitle,
+  .SAnalysisTitle {
+    font-size: 24px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Формы авторизации */
+  .SFormWrapper {
+    padding: 16px !important;
+  }
+
+  .SFormContainer {
+    width: 100% !important;
+    max-width: 400px !important;
+    height: auto !important;
+    min-height: 350px !important;
+  }
+
+  .SFormContent {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Маленькие мобильные устройства */
+@media (max-width: 480px) {
+  .SFormContainer {
+    border-radius: 20px !important;
+    padding: 20px !important;
+  }
+
+  .SFormTitle {
+    font-size: 20px !important;
+  }
+}
+
+/* Адаптивные кнопки */
+button {
+  min-height: 18px;
+}
+
+@media (max-width: 768px) {
+  /* Кнопки в формах */
+  .SSubmitBtn,
+  .BaseButton {
+    height: 42px !important;
+    min-height: 42px !important;
+    font-size: 12px !important;
+  }
+
+  /* Кнопки действий */
+  .SDeleteBtn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+
+  /* Кнопки категорий */
+  .SCategoryBtn {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 360px) {
+  .BaseButton,
+  .SSubmitBtn {
+    font-size: 11px !important;
+  }
+}

@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
+import { useMobile } from "../../hooks/useMobile.js";
 import {
   SMainContainer,
   SPageTitle,
@@ -24,6 +31,8 @@ import {
   SCategoryIcon,
   SCategoryContent,
   SCategoryRow,
+  SMobileTable,
+  SMobileTransaction,
 } from "./Main.styled.js";
 
 // Маппинг категорий для API
@@ -62,6 +71,7 @@ const Main = () => {
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isMobile, isTablet } = useMobile();
 
   const categories = [
     { name: "Еда", icon: "/images/category-food.svg" },
@@ -326,6 +336,39 @@ const Main = () => {
                     )}
                   </tbody>
                 </STable>
+
+                {isMobile && sortedTransactions.length > 0 ? (
+                  <SMobileTable>
+                    {sortedTransactions.map((transaction) => (
+                      <SMobileTransaction key={transaction._id}>
+                        <div className="mobile-transaction-header">
+                          <div className="mobile-transaction-description">
+                            {transaction.description}
+                          </div>
+                          <div className="mobile-transaction-category">
+                            {REVERSE_CATEGORY_MAPPING[transaction.category] ||
+                              transaction.category}
+                          </div>
+                        </div>
+
+                        <div className="mobile-transaction-footer">
+                          <div className="mobile-transaction-date">
+                            {formatDate(transaction.date)}
+                          </div>
+                          <div className="mobile-transaction-amount">
+                            {formatAmount(transaction.sum)}
+                          </div>
+                          <SDeleteBtn
+                            onClick={() => handleDelete(transaction._id)}
+                            style={{ padding: "4px" }}
+                          >
+                            <SDeleteIcon src="/images/bag.svg" alt="Удалить" />
+                          </SDeleteBtn>
+                        </div>
+                      </SMobileTransaction>
+                    ))}
+                  </SMobileTable>
+                ) : null}
               </STableWrapper>
             </STableForm>
           </SLeftColumn>

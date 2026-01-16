@@ -16,17 +16,36 @@ export const SPageTitle = styled.h2`
 export const SFormsContainer = styled.div`
   display: flex;
   gap: 34px;
-  align-items: flex-start; /* Выравниваем формы по верху */
+  align-items: flex-start; 
+
+  @media (max-width: 1024px) {
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+  }
 `;
 
 export const SLeftColumn = styled.div`
   flex: 2;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex: none;
+  }
 `;
 
 export const SRightColumn = styled.div`
   flex: 1;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex: none;
+  }
 `;
 
 export const STableForm = styled.div`
@@ -39,6 +58,17 @@ export const STableForm = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 1024px) {
+    height: 500px;
+    padding: 24px;
+  }
+  
+  @media (max-width: 768px) {
+    height: 400px;
+    padding: 16px;
+    border-radius: 20px;
+  }
 `;
 
 export const STableTitle = styled.h3`
@@ -52,8 +82,8 @@ export const STableTitle = styled.h3`
 
 export const STableWrapper = styled.div`
   flex: 1;
-  overflow-y: auto; /* Только вертикальная прокрутка */
-  overflow-x: hidden; /* Убираем горизонтальную прокрутку */
+  overflow-y: auto; 
+  overflow-x: hidden;
   padding: 0 24px 24px 24px;
 
   &::-webkit-scrollbar {
@@ -121,6 +151,42 @@ export const STable = styled.table`
   tbody tr:last-child td {
     border-bottom: none;
   }
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    
+    th, td {
+      padding: 8px 4px;
+      font-size: 12px;
+    }
+    
+    td:nth-child(1), th:nth-child(1) {
+      max-width: 120px;
+    }
+    
+    td:nth-child(2), th:nth-child(2) {
+      max-width: 80px;
+    }
+    
+    td:nth-child(3), th:nth-child(3) {
+      max-width: 70px;
+    }
+    
+    td:nth-child(4), th:nth-child(4) {
+      max-width: 80px;
+    }
+    
+    td:nth-child(5), th:nth-child(5) {
+      max-width: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    th, td {
+      padding: 6px 2px;
+      font-size: 10px;
+    }
+  }
 `;
 
 export const SDeleteBtn = styled.button`
@@ -142,6 +208,13 @@ export const SDeleteBtn = styled.button`
       filter: brightness(0) invert(1);
     }
   }
+
+  @media (max-width: 768px) {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+  }
 `;
 
 export const SDeleteIcon = styled.img`
@@ -159,6 +232,18 @@ export const SNewExpenseForm = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 1024px) {
+    height: auto;
+    min-height: 500px;
+    padding: 24px;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    border-radius: 20px;
+    min-height: auto;
+  }
 `;
 
 export const SNewExpenseFormTitle = styled.h3`
@@ -285,6 +370,7 @@ export const SSubmitBtn = styled.button`
   font-size: 12px;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  height: 42px;
 
   &:hover {
     background-color: #5a2bb8;
@@ -293,5 +379,70 @@ export const SSubmitBtn = styled.button`
 
   &:active {
     transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  @media (max-width: 768px) {
+    height: 42px;
+    font-size: 12px;
+  }
+`;
+
+export const SMobileTable = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+export const SMobileTransaction = styled.div`
+  background: #ffffff;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  
+  .mobile-transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  
+  .mobile-transaction-category {
+    font-size: 12px;
+    color: #7334ea;
+    background: #f1ebfd;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+  
+  .mobile-transaction-description {
+    font-weight: 500;
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  
+  .mobile-transaction-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  
+  .mobile-transaction-date {
+    font-size: 11px;
+    color: #999;
+  }
+  
+  .mobile-transaction-amount {
+    font-weight: 600;
+    color: #000;
   }
 `;

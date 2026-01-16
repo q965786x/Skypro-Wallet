@@ -5,6 +5,10 @@ export const SAnalysisContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 64px 40px 40px;
+
+  @media (max-width: 768px) {
+    padding: 16px !important;
+  }
 `;
 
 export const SAnalysisTitle = styled.h2`
@@ -19,17 +23,34 @@ export const SAnalysisContent = styled.div`
   //стили для .analysis-content
   display: flex;
   gap: 40px;
+
+  @media (max-width: 1024px) {
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+  }
 `;
 
 export const SAnalysisLeft = styled.div`
   //стили для .analysis-left
   width: 379px;
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 export const SAnalysisRight = styled.div`
   flex: 1;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 export const SPeriodSection = styled.div`
@@ -42,6 +63,12 @@ export const SPeriodSection = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+  }
 `;
 
 export const SPeriodTitle = styled.h3`
@@ -163,6 +190,11 @@ export const SDay = styled.div`
     background: ${(props) => (props.$selected ? "#F1EBFD" : "#e8e8e8")};
     border-color: ${(props) => (props.$selected ? "#7334EA" : "#7334ea")};
   }
+
+  @media (max-width: 768px) {
+    height: 32px;
+    margin: 1px;
+  }
 `;
 
 export const SDayNumber = styled.div`
@@ -196,6 +228,16 @@ export const SDiagramSection = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    height: auto;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    min-height: 400px;
+  }
 `;
 
 export const STotalContainer = styled.div`
@@ -223,6 +265,17 @@ export const SChartsContainer = styled.div`
   display: flex;
   gap: 24px;
   justify-content: space-between;
+  position: relative;
+  
+  @media (max-width: 1024px) {
+    gap: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
 `;
 
 export const SChartWrapper = styled.div`
@@ -232,6 +285,15 @@ export const SChartWrapper = styled.div`
   align-items: center;
   justify-content: flex-start;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    flex: 0 0 calc(33.333% - 8px);
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    flex: 0 0 calc(50% - 6px);
+  }
 `;
 
 export const SChartAmount = styled.div`
@@ -256,6 +318,16 @@ export const SChartDiagram = styled.div`
   overflow: hidden;
   display: flex;
   align-items: flex-end;
+
+  @media (max-width: 1024px) {
+    height: 250px;
+    width: 70px;
+  }
+  
+  @media (max-width: 768px) {
+    height: 200px;
+    width: 60px;
+  }
 `;
 
 export const SChartColumn = styled.div`

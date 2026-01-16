@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
+import { useMobile } from "../../hooks/useMobile.js";
 import {
   SAnalysisContainer,
   SAnalysisTitle,
@@ -55,6 +56,8 @@ const Cost = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const calendarContentRef = useRef(null);
+
+  const { isMobile, isTablet } = useMobile();
 
   // Отладочный вывод
   useEffect(() => {
@@ -377,10 +380,11 @@ const Cost = () => {
             display: "flex",
             gap: "10px",
             justifyContent: "space-between",
+            flexWrap: "wrap",
           }}
         >
           {/* Кнопки переключения вида */}
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => setIsWeeklyView(false)}
               style={{
@@ -392,6 +396,8 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               За день
@@ -407,12 +413,14 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               За неделю
             </button>
           </div>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => refetchTransactions()}
               style={{
@@ -424,6 +432,8 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               Обновить данные

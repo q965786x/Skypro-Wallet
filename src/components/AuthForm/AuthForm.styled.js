@@ -144,6 +144,11 @@ export const BaseButton = styled.button`
     transform: ${(props) =>
       props.$disabled || props.$hasError ? "none" : "scale(0.98)"};
   }
+
+  @media (max-width: 768px) {
+    height: 42px; /* Точная высота по ТЗ */
+    font-size: 12px;
+  }
 `;
 
 export const SHeader = styled.header`
@@ -158,6 +163,11 @@ export const SHeader = styled.header`
   left: 0;
   right: 0;
   z-index: 1000;
+
+  @media (max-width: 768px) {
+    padding: 0 16px;
+    height: 56px;
+  }
 `;
 
 export const SLogo = styled.a`
@@ -169,6 +179,12 @@ export const SLogo = styled.a`
 export const SLogoImg = styled.img`
   height: 32px;
   width: auto;
+
+  @media (max-width: 768px) {
+    height: 14px !important;
+    width: 109px !important;
+    object-fit: contain;
+  }
 `;
 
 export const ErrorMessage = styled.div`
