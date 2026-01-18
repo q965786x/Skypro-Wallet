@@ -9,29 +9,31 @@ import {
   SHeaderNav,
   SNavLink,
   SLogoutBtn,
-  SMobileMenuBtn,
-  SMobileMenu,
-  SMobileMenuOverlay,
-  SHeaderMobile,
+  SMobileNavDropdown,
+  SMobileNavButton,
+  SMobileNavTriangle,
+  SMobileNavModal,
+  SMobileNavModalItem,
+  SMobileNavModalOverlay,
 } from "./Header.styled.js";
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Определяем мобильное устройство
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const isExpensesPage = location.pathname === "/expenses";
@@ -40,29 +42,52 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     navigate("/sign-in");
-    setIsMobileMenuOpen(false);
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  // Обработчик для "Мои расходы"
+  const handleExpensesClick = () => {
+    navigate("/expenses");
+    setIsDropdownOpen(false);
   };
 
-  // Текст кнопки для мобильных
-  const logoutText = isMobile ? "Выйти" : "Выйти";
+  // Обработчик для "Новый расход"
+  const handleNewExpenseClick = () => {
+    navigate("/expenses#new-expense");
+    setIsDropdownOpen(false);
+  };
 
+  // Обработчик для "Анализ расходов"
+  const handleAnalysisClick = () => {
+    navigate("/analysis#diagrams");
+    setIsDropdownOpen(false);
+  };
+
+  const handleMobileNavClick = (path) => {
+    navigate(path);
+    setIsDropdownOpen(false);
+  };
+
+  // Определяем текущий выбранный пункт
+  const getCurrentNavText = () => {
+    if (isExpensesPage) return "Мои расходы";
+    if (isAnalysisPage) return "Анализ расходов";
+    return "Мои расходы"; // по умолчанию
+  };
 
   return (
     <>
+      {/* Основной Header */}
       <SHeader>
         <SHeaderContent>
           <SLogo as={Link} to="/">
-            <SLogoImg 
-              src="/images/logo.png" 
-              alt="logo"
+            <SLogoImg
+              src="/images/logo.png"
+              alt="Skypro.Wallet"
               onError={(e) => {
                 // Fallback если изображение не загрузилось
-                e.target.style.display = 'none';
-                e.target.parentNode.innerHTML = '<span style="font-weight: 700; color: #7334ea; font-size: 18px;">ExpenseTracker</span>';
+                e.target.style.display = "none";
+                e.target.parentNode.innerHTML =
+                  '<span style="font-weight: 700; color: #7334ea; font-size: 18px;">Skypro.Wallet</span>';
               }}
             />
           </SLogo>
@@ -73,75 +98,68 @@ const Header = () => {
               as={Link}
               to="/expenses"
               className={isExpensesPage ? "active" : ""}
-              onClick={() => setIsMobileMenuOpen(false)}
             >
               Мои расходы
+              {isExpensesPage && <span className="nav-dot">●</span>}
             </SNavLink>
             <SNavLink
               as={Link}
               to="/analysis"
               className={isAnalysisPage ? "active" : ""}
-              onClick={() => setIsMobileMenuOpen(false)}
             >
               Анализ расходов
+              {isAnalysisPage && <span className="nav-dot">●</span>}
             </SNavLink>
           </SHeaderNav>
 
-          {/* Мобильное меню - кнопка */}
-          <SMobileMenuBtn onClick={toggleMobileMenu}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </SMobileMenuBtn>
+          {/* Мобильная навигация - выпадающее меню */}
+          {isMobile && (
+            <SMobileNavDropdown>
+              <SMobileNavButton
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                $active={isExpensesPage || isAnalysisPage}
+              >
+                {getCurrentNavText()}
+                <SMobileNavTriangle $open={isDropdownOpen}>
+                  ▼
+                </SMobileNavTriangle>
+              </SMobileNavButton>
+            </SMobileNavDropdown>
+          )}
 
           <SLogoutBtn onClick={handleLogout} title="Выйти из аккаунта">
-            {logoutText}
+            Выйти
           </SLogoutBtn>
         </SHeaderContent>
       </SHeader>
 
-      {/* Мобильное меню (открывается поверх контента) */}
-      {isMobileMenuOpen && (
+      {/* Модальное окно мобильной навигации */}
+      {isMobile && isDropdownOpen && (
         <>
-          <SMobileMenuOverlay onClick={toggleMobileMenu} />
-          <SMobileMenu>
-            <SHeaderMobile>
-              <SLogo as={Link} to="/" onClick={toggleMobileMenu}>
-                <SLogoImg src="/images/logo.png" alt="logo" />
-              </SLogo>
-              <SMobileMenuBtn onClick={toggleMobileMenu} $close={true}>
-                <span></span>
-                <span></span>
-              </SMobileMenuBtn>
-            </SHeaderMobile>
-
-            <SHeaderNav $mobile={true}>
-              <SNavLink
-                as={Link}
-                to="/expenses"
-                className={isExpensesPage ? "active" : ""}
-                onClick={toggleMobileMenu}
-              >
-                Мои расходы
-              </SNavLink>
-              <SNavLink
-                as={Link}
-                to="/analysis"
-                className={isAnalysisPage ? "active" : ""}
-                onClick={toggleMobileMenu}
-              >
-                Анализ расходов
-              </SNavLink>
-            </SHeaderNav>
-
-            <SLogoutBtn 
-              onClick={handleLogout} 
-              $mobile={true}
-              style={{ height: '32px', marginTop: 'auto' }}
+          <SMobileNavModalOverlay onClick={() => setIsDropdownOpen(false)} />
+          <SMobileNavModal>
+            <SMobileNavModalItem
+              $active={isExpensesPage}
+              $variant="primary"
+              onClick={handleExpensesClick}
             >
-              Выйти из аккаунта
-            </SLogoutBtn>
-          </SMobileMenu>
+              Мои расходы
+            </SMobileNavModalItem>
+            <SMobileNavModalItem
+              $active={false}
+              $variant="secondary"
+              onClick={handleNewExpenseClick}
+            >
+              Новый расход
+            </SMobileNavModalItem>
+            <SMobileNavModalItem
+              $active={isAnalysisPage}
+              $variant="secondary"
+              onClick={handleAnalysisClick}
+            >
+              Анализ расходов
+            </SMobileNavModalItem>
+          </SMobileNavModal>
         </>
       )}
     </>

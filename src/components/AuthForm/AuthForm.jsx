@@ -135,73 +135,71 @@ const AuthForm = ({ isSignUp }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (isSubmitting) return;
+    if (isSubmitting) return;
 
-  setIsSubmitting(true);
-  setFormError("");
+    setIsSubmitting(true);
+    setFormError("");
 
-  // Валидация всех полей
-  if (!validateAllFields()) {
-    setFormError(
-      "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-    );
-    setIsSubmitting(false);
-    return;
-  }
-
-  try {
-    console.log("🚀 Начинаю авторизацию...");
-
-    const data = isSignUp
-      ? await signUp({
-          name: formData.name,
-          email: formData.email, // Для signUp
-          password: formData.password
-        })
-      : await signIn({
-          login: formData.email, // ИЗМЕНЕНИЕ: используем login вместо email
-          password: formData.password
-        });
-
-        console.log("✅ Авторизация успешна, данные:", data);
-
-    // ВАЖНО: Проверяем, что данные получены корректно
-    if (data && data.user && data.token) {
-      console.log("✅ Вызываю login() с данными:", {
-        user: data.user,
-        tokenLength: data.token.length
-      });
-      
-      // Сохраняем данные через контекст
-      login(data.user, data.token);
-
-      console.log("✅ login() выполнен, переход на /expenses");
-      
-      navigate("/expenses", { replace: true });
-     
-    } else {
-      console.error("❌ Некорректные данные от сервера:", data);
-      throw new Error("Некорректные данные от сервера");
+    // Валидация всех полей
+    if (!validateAllFields()) {
+      setFormError(
+        "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку.",
+      );
+      setIsSubmitting(false);
+      return;
     }
 
-  } catch (err) {    
-    console.error("Ошибка авторизации:", err.message);
+    try {
+      console.log("🚀 Начинаю авторизацию...");
 
-    setFormError(
-      err.message || "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-    );
+      const data = isSignUp
+        ? await signUp({
+            name: formData.name,
+            email: formData.email, // Для signUp
+            password: formData.password,
+          })
+        : await signIn({
+            login: formData.email, // ИЗМЕНЕНИЕ: используем login вместо email
+            password: formData.password,
+          });
 
-    // ВАЖНО: При ошибке входа очищаем localStorage
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    
-  } finally {
-    console.log("🏁 Завершение обработки авторизации");
-    setIsSubmitting(false);
-  }
-};
+      console.log("✅ Авторизация успешна, данные:", data);
+
+      // ВАЖНО: Проверяем, что данные получены корректно
+      if (data && data.user && data.token) {
+        console.log("✅ Вызываю login() с данными:", {
+          user: data.user,
+          tokenLength: data.token.length,
+        });
+
+        // Сохраняем данные через контекст
+        login(data.user, data.token);
+
+        console.log("✅ login() выполнен, переход на /expenses");
+
+        navigate("/expenses", { replace: true });
+      } else {
+        console.error("❌ Некорректные данные от сервера:", data);
+        throw new Error("Некорректные данные от сервера");
+      }
+    } catch (err) {
+      console.error("Ошибка авторизации:", err.message);
+
+      setFormError(
+        err.message ||
+          "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку.",
+      );
+
+      // ВАЖНО: При ошибке входа очищаем localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+    } finally {
+      console.log("🏁 Завершение обработки авторизации");
+      setIsSubmitting(false);
+    }
+  };
 
   // Проверяем, заполнено ли поле и валидно ли оно
   const isFieldFilled = (fieldName) => {
@@ -319,7 +317,6 @@ const AuthForm = ({ isSignUp }) => {
                 $fullWidth={true}
                 $disabled={!isFormValid || isSubmitting}
                 $hasError={hasFieldErrors() || formError}
-                onClick={handleSubmit}
               >
                 {isSubmitting
                   ? "Загрузка..."

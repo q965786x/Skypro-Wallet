@@ -19,7 +19,7 @@ import {
 
 const TransactionProvider = ({ children }) => {
   // Для отладки StrictMode
-  useDebugValue("TransactionProvider");  
+  useDebugValue("TransactionProvider");
 
   const { token, isCheckingAuth } = useContext(AuthContext);
   const [transactions, setTransactions] = useState([]);
@@ -27,22 +27,22 @@ const TransactionProvider = ({ children }) => {
   const [error, setError] = useState("");
   const abortControllerRef = useRef(null); // Для отмены запросов
   const previousTokenRef = useRef(null); // Для отслеживания изменений токена
-  
+
   const componentId = useRef(Math.random().toString(36).substr(2, 9));
   const hasLoadedInitialData = useRef(false); // Флаг для отслеживания начальной загрузки
+  const isMountedRef = useRef(true);
 
-  
-  
   // Инициализация при монтировании
   useEffect(() => {
     console.log("🎯 TransactionProvider инициализирован");
-        
+
     return () => {
       console.log("🎯 TransactionProvider размонтирован");
-            
+      isMountedRef.current = false;
+
       // Отменяем все активные запросы при размонтировании
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort("Компонент размонтирован");
       }
     };
   }, []);
@@ -52,8 +52,9 @@ const TransactionProvider = ({ children }) => {
     setError("");
   }, []);
 
-  
   const loadTransactions = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
     // Если идет проверка авторизации - ждем
     if (isCheckingAuth) {
       console.log("⏳ Ожидаю завершения проверки авторизации...");
@@ -62,7 +63,6 @@ const TransactionProvider = ({ children }) => {
 
     console.log("🔄 loadTransactions вызван, token:", token ? "есть" : "нет");
 
-    
     // Отменяем предыдущий запрос, если он существует
     if (abortControllerRef.current) {
       abortControllerRef.current.abort("Новый запрос начат");
@@ -70,8 +70,10 @@ const TransactionProvider = ({ children }) => {
 
     if (!token) {
       console.log("🔄 Нет токена, очищаю транзакции");
-      setTransactions([]);
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setTransactions([]);
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -80,8 +82,11 @@ const TransactionProvider = ({ children }) => {
     const currentAbortController = abortControllerRef.current;
 
     try {
-      setIsLoading(true);
-      setError("");
+      if (isMountedRef.current) {
+        setIsLoading(true);
+        setError("");
+      }
+
       console.log("🔄 Загружаю транзакции...");
 
       const result = await fetchTransactions({
@@ -102,24 +107,29 @@ const TransactionProvider = ({ children }) => {
 
       console.log("🔄 Устанавливаю", transactionsArray.length, "транзакций");
 
-      setTransactions(transactionsArray);  
-      hasLoadedInitialData.current = true;    
+      if (isMountedRef.current) {
+        setTransactions(transactionsArray);
+        hasLoadedInitialData.current = true;
+      }
     } catch (error) {
       // Игнорируем ошибки отмены запроса
-      if (error.name === "CanceledError" || 
-          error.name === "AbortError" || 
-          error.code === "ERR_CANCELED" ||
-          error.message === "canceled" ||
-          error.message === "Запрос отменен" ||
-          error.message === "Новый запрос начат" ||
-          error.message === "Компонент размонтирован") {
+      if (
+        error.name === "CanceledError" ||
+        error.name === "AbortError" ||
+        error.code === "ERR_CANCELED" ||
+        error.message === "canceled" ||
+        error.message === "Запрос отменен" ||
+        error.message === "Новый запрос начат" ||
+        error.message === "Компонент размонтирован"
+      ) {
         console.log("Запрос отменен:", error.message);
         return;
       }
 
       console.error("❌ Ошибка загрузки транзакций:", error);
 
-      
+      if (!isMountedRef.current) return;
+
       // Если ошибка 401 (Unauthorized) - очищаем состояние
       if (
         error.message.includes("Сессия истекла") ||
@@ -131,10 +141,21 @@ const TransactionProvider = ({ children }) => {
       } else {
         setError(error.message || "Ошибка загрузки транзакций");
       }
-    } finally {      
-        setIsLoading(false);      
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [token, isCheckingAuth]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort("Компонент размонтирован");
+      }
+    };
+  }, []);
 
   // Загружаем транзакции только при изменении токена
   useEffect(() => {
@@ -143,7 +164,7 @@ const TransactionProvider = ({ children }) => {
       console.log("⏳ Пропускаю загрузку, идет проверка авторизации");
       return;
     }
-      // Если токен изменился или мы еще не загружали данные
+    // Если токен изменился или мы еще не загружали данные
     if (token !== previousTokenRef.current || !hasLoadedInitialData.current) {
       console.log("🔄 Токен изменился или данные не загружены, загружаю...");
       previousTokenRef.current = token;
@@ -153,7 +174,7 @@ const TransactionProvider = ({ children }) => {
       const timeoutId = setTimeout(() => {
         loadTransactions();
       }, 100);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [token, isCheckingAuth, loadTransactions]);
@@ -190,7 +211,7 @@ const TransactionProvider = ({ children }) => {
         return false;
       }
     },
-    [token, loadTransactions]
+    [token, loadTransactions],
   );
 
   // Редактирование транзакции
@@ -215,7 +236,7 @@ const TransactionProvider = ({ children }) => {
         return false;
       }
     },
-    [token, loadTransactions]
+    [token, loadTransactions],
   );
 
   // Удаление транзакции
@@ -236,7 +257,7 @@ const TransactionProvider = ({ children }) => {
         return false;
       }
     },
-    [token, loadTransactions]
+    [token, loadTransactions],
   );
 
   // Получение транзакций за период (для страницы анализа)
@@ -255,23 +276,23 @@ const TransactionProvider = ({ children }) => {
         return [];
       }
     },
-    [token]
+    [token],
   );
 
   // Вспомогательные функции
   const getTransactionsByCategory = useCallback(
     (category) => {
       return transactions.filter(
-        (transaction) => transaction.category === category
+        (transaction) => transaction.category === category,
       );
     },
-    [transactions]
+    [transactions],
   );
 
   const getTotalAmount = useCallback(() => {
     return transactions.reduce(
       (sum, transaction) => sum + (parseFloat(transaction.sum) || 0),
-      0
+      0,
     );
   }, [transactions]);
 
@@ -313,7 +334,7 @@ const TransactionProvider = ({ children }) => {
       getTotalAmount,
       getCategoriesSummary,
       clearError,
-    ]
+    ],
   );
 
   return (

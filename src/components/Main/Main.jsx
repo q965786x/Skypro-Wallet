@@ -4,7 +4,9 @@ import React, {
   useContext,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
 import { useMobile } from "../../hooks/useMobile.js";
@@ -55,6 +57,7 @@ const REVERSE_CATEGORY_MAPPING = {
 };
 
 const Main = () => {
+  const location = useLocation();
   const { token } = useAuth();
   const {
     transactions,
@@ -81,6 +84,22 @@ const Main = () => {
     { name: "Образование", icon: "/images/category-education.svg" },
     { name: "Другое", icon: "/images/category-other.svg" },
   ];
+
+  // Ref для формы нового расхода
+  const newExpenseFormRef = useRef(null);
+
+  // Эффект для обработки якорных ссылок
+  useEffect(() => {
+    if (location.hash === "#new-expense" && newExpenseFormRef.current) {
+      // Скроллим к форме нового расхода
+      setTimeout(() => {
+        newExpenseFormRef.current.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      // Убираем hash из URL чтобы при обновлении страницы не скроллилось
+      window.history.replaceState(null, null, window.location.pathname);
+    }
+  }, [location]);
 
   // Устанавливаем сегодняшнюю дату по умолчанию при загрузке
   useEffect(() => {
@@ -134,16 +153,18 @@ const Main = () => {
       setIsSubmitting(true);
 
       try {
-        // Форматируем дату для API (MM-DD-YYYY)
-        const [year, month, day] = date.split("-");
-        const apiDate = `${parseInt(month)}-${parseInt(day)}-${year}`;
+        // Преобразуем дату в формат для API
+        const formatDateForAPI = (dateStr) => {
+          const [year, month, day] = dateStr.split("-");
+          return `${parseInt(month)}-${parseInt(day)}-${year}`;
+        };
 
         // Формируем объект транзакции
         const transactionData = {
           description: description.trim(),
           sum: parseFloat(amount),
           category: CATEGORY_MAPPING[selectedCategory],
-          date: apiDate,
+          date: formatDateForAPI(date),
         };
 
         console.log("📤 Main.jsx: Отправляю транзакцию:", transactionData);
@@ -168,7 +189,7 @@ const Main = () => {
         setIsSubmitting(false);
       }
     },
-    [token, description, amount, date, selectedCategory, addNewTransaction]
+    [token, description, amount, date, selectedCategory, addNewTransaction],
   );
 
   const handleDelete = useCallback(
@@ -187,7 +208,7 @@ const Main = () => {
         alert(err.message || "Ошибка при удалении транзакции");
       }
     },
-    [removeTransaction]
+    [removeTransaction],
   );
 
   const formatDate = (dateStr) => {
@@ -374,96 +395,102 @@ const Main = () => {
           </SLeftColumn>
 
           <SRightColumn>
-            {/* Форма "Новый расход" */}
-            <SNewExpenseForm>
-              <SNewExpenseFormTitle>Новый расход</SNewExpenseFormTitle>
-              <form id="expense-form" onSubmit={handleSubmit}>
-                <SFormGroup>
-                  <SFormLabel htmlFor="description">Описание</SFormLabel>
-                  <SFormInput
-                    type="text"
-                    id="description"
-                    placeholder="Введите описание"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+            {/* Форма "Новый расход" с якорем */}
+            <div id="new-expense-form" ref={newExpenseFormRef}>
+              <SNewExpenseForm>
+                <SNewExpenseFormTitle>Новый расход</SNewExpenseFormTitle>
+                <form id="expense-form" onSubmit={handleSubmit}>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="description">Описание</SFormLabel>
+                    <SFormInput
+                      type="text"
+                      id="description"
+                      placeholder="Введите описание"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel>Категория</SFormLabel>
-                  <SCategoryButtons>
-                    {categoryRows.map((row, rowIndex) => (
-                      <SCategoryRow key={rowIndex}>
-                        {row.map((category) => (
-                          <SCategoryBtn
-                            key={category.name}
-                            type="button"
-                            className={
-                              selectedCategory === category.name ? "active" : ""
-                            }
-                            onClick={() => setSelectedCategory(category.name)}
-                            disabled={isSubmitting}
-                          >
-                            <SCategoryIcon
-                              src={category.icon}
-                              alt={category.name}
-                            />
-                            <SCategoryContent>{category.name}</SCategoryContent>
-                          </SCategoryBtn>
-                        ))}
-                      </SCategoryRow>
-                    ))}
-                  </SCategoryButtons>
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel>Категория</SFormLabel>
+                    <SCategoryButtons>
+                      {categoryRows.map((row, rowIndex) => (
+                        <SCategoryRow key={rowIndex}>
+                          {row.map((category) => (
+                            <SCategoryBtn
+                              key={category.name}
+                              type="button"
+                              className={
+                                selectedCategory === category.name
+                                  ? "active"
+                                  : ""
+                              }
+                              onClick={() => setSelectedCategory(category.name)}
+                              disabled={isSubmitting}
+                            >
+                              <SCategoryIcon
+                                src={category.icon}
+                                alt={category.name}
+                              />
+                              <SCategoryContent>
+                                {category.name}
+                              </SCategoryContent>
+                            </SCategoryBtn>
+                          ))}
+                        </SCategoryRow>
+                      ))}
+                    </SCategoryButtons>
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel htmlFor="date">Дата</SFormLabel>
-                  <SFormInput
-                    type="date"
-                    id="date"
-                    placeholder="Введите дату"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="date">Дата</SFormLabel>
+                    <SFormInput
+                      type="date"
+                      id="date"
+                      placeholder="Введите дату"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel htmlFor="amount">Сумма</SFormLabel>
-                  <SFormInput
-                    type="number"
-                    id="amount"
-                    placeholder="Введите сумму"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    required
-                    min="0.01"
-                    step="0.01"
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="amount">Сумма</SFormLabel>
+                    <SFormInput
+                      type="number"
+                      id="amount"
+                      placeholder="Введите сумму"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      required
+                      min="0.01"
+                      step="0.01"
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SSubmitBtn type="submit" disabled={isSubmitting || !token}>
-                  {isSubmitting ? "Добавление..." : "Добавить новый расход"}
-                </SSubmitBtn>
+                  <SSubmitBtn type="submit" disabled={isSubmitting || !token}>
+                    {isSubmitting ? "Добавление..." : "Добавить новый расход"}
+                  </SSubmitBtn>
 
-                {!token && (
-                  <p
-                    style={{
-                      color: "#ff4444",
-                      fontSize: "12px",
-                      textAlign: "center",
-                      marginTop: "10px",
-                    }}
-                  >
-                    Требуется авторизация
-                  </p>
-                )}
-              </form>
-            </SNewExpenseForm>
+                  {!token && (
+                    <p
+                      style={{
+                        color: "#ff4444",
+                        fontSize: "12px",
+                        textAlign: "center",
+                        marginTop: "10px",
+                      }}
+                    >
+                      Требуется авторизация
+                    </p>
+                  )}
+                </form>
+              </SNewExpenseForm>
+            </div>
           </SRightColumn>
         </SFormsContainer>
       </SMainContainer>

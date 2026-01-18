@@ -446,3 +446,33 @@ export const SMobileTransaction = styled.div`
     color: #000;
   }
 `;
+
+export const SViewSelector = styled.div`
+  display: flex;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e5e7;
+  background-color: #f4f5f6;
+`;
+
+export const SToggleViewButton = styled.button`
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background-color: ${props => props.$active ? '#f1ebfd' : 'transparent'};
+  color: ${props => props.$active ? '#7334ea' : '#000000'};
+  font-size: 14px;
+  font-weight: ${props => props.$active ? '600' : '400'};
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: ${props => props.$active ? '#e8dffb' : '#e8e8e8'};
+  }
+  
+  &:first-child {
+    border-right: 1px solid #e5e5e7;
+  }
+`;

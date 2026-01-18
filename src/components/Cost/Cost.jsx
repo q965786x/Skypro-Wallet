@@ -6,6 +6,7 @@ import React, {
   useContext,
   useMemo,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
 import { useMobile } from "../../hooks/useMobile.js";
@@ -41,12 +42,16 @@ import {
 } from "./Cost.styled.js";
 
 const Cost = () => {
+  const location = useLocation();
   const { token } = useAuth();
   const {
     isLoading,
     refetchTransactions,
     transactions: allTransactions,
   } = useContext(TransactionsContext);
+
+  // Ref для диаграмм
+  const diagramsRef = useRef(null);
 
   // Состояние для выбранного дня (по умолчанию сегодня)
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -59,11 +64,24 @@ const Cost = () => {
 
   const { isMobile, isTablet } = useMobile();
 
+  // Эффект для обработки якорных ссылок на диаграммы
+  useEffect(() => {
+    if (location.hash === "#diagrams" && diagramsRef.current) {
+      // Скроллим к диаграммам
+      setTimeout(() => {
+        diagramsRef.current.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      // Убираем hash из URL
+      window.history.replaceState(null, null, window.location.pathname);
+    }
+  }, [location]);
+
   // Отладочный вывод
   useEffect(() => {
     console.log(
       "📊 Cost.jsx: Все транзакций из контекста:",
-      allTransactions?.length
+      allTransactions?.length,
     );
   }, [allTransactions]);
 
@@ -144,7 +162,7 @@ const Cost = () => {
       console.log("📅 Отфильтровано:", filtered.length, "транзакций");
       return filtered;
     },
-    [allTransactions, parseTransactionDate]
+    [allTransactions, parseTransactionDate],
   );
 
   // Получаем транзакции для выбранного периода
@@ -304,7 +322,7 @@ const Cost = () => {
   const categories = calculateCategoryData(transactionsForSelectedPeriod);
   const totalAmount = categories.reduce(
     (sum, category) => sum + category.amount,
-    0
+    0,
   );
   const maxAmount = Math.max(...categories.map((c) => c.amount), 1);
 
@@ -532,7 +550,7 @@ const Cost = () => {
                           const isSelected = isDaySelected(
                             currentYear,
                             currentMonth,
-                            day
+                            day,
                           );
 
                           return (
@@ -588,7 +606,7 @@ const Cost = () => {
                           const isSelected = isDaySelected(
                             nextYear,
                             nextMonth,
-                            day
+                            day,
                           );
 
                           return (
@@ -616,41 +634,43 @@ const Cost = () => {
 
           {/* Правая часть с диаграммами */}
           <SAnalysisRight>
-            <SDiagramSection>
-              <STotalContainer>
-                <STotalAmount>
-                  {totalAmount > 0
-                    ? totalAmount.toLocaleString("ru-RU") + " ₽"
-                    : "0 ₽"}
-                </STotalAmount>
-                <STotalPeriod>{getPeriodTitle()}</STotalPeriod>
-              </STotalContainer>
+            {/* Диаграммы с якорем */}
+            <div id="diagrams-section" ref={diagramsRef}>
+              <SDiagramSection>
+                <STotalContainer>
+                  <STotalAmount>
+                    {totalAmount > 0
+                      ? totalAmount.toLocaleString("ru-RU") + " ₽"
+                      : "0 ₽"}
+                  </STotalAmount>
+                  <STotalPeriod>{getPeriodTitle()}</STotalPeriod>
+                </STotalContainer>
 
-              {/* Шесть диаграмм в ряд */}
-              <SChartsContainer>
-                {categories.map((category) => (
-                  <SChartWrapper key={category.name}>
-                    <SChartAmount>
-                      {category.amount > 0
-                        ? category.amount.toLocaleString("ru-RU") + " ₽"
-                        : "0 ₽"}
-                    </SChartAmount>
-                    <SChartDiagram>
-                      <SChartColumn
-                        $height={
-                          maxAmount > 0
-                            ? (category.amount / maxAmount) * 100
-                            : 0
-                        }
-                        $color={category.color}
-                      />
-                    </SChartDiagram>
-                    <SChartCategory>{category.name}</SChartCategory>
-                  </SChartWrapper>
-                ))}
+                {/* Шесть диаграмм в ряд */}
+                <SChartsContainer>
+                  {categories.map((category) => (
+                    <SChartWrapper key={category.name}>
+                      <SChartAmount>
+                        {category.amount > 0
+                          ? category.amount.toLocaleString("ru-RU") + " ₽"
+                          : "0 ₽"}
+                      </SChartAmount>
+                      <SChartDiagram>
+                        <SChartColumn
+                          $height={
+                            maxAmount > 0
+                              ? (category.amount / maxAmount) * 100
+                              : 0
+                          }
+                          $color={category.color}
+                        />
+                      </SChartDiagram>
+                      <SChartCategory>{category.name}</SChartCategory>
+                    </SChartWrapper>
+                  ))}
 
-                {/* Если транзакций нет, показываем сообщение */}
-                {transactionsForSelectedPeriod.length === 0 && (
+                  {/* Если транзакций нет, показываем сообщение */}
+                  {transactionsForSelectedPeriod.length === 0 && (
                     <div
                       style={{
                         position: "absolute",
@@ -666,8 +686,9 @@ const Cost = () => {
                       Нет расходов за выбранный период
                     </div>
                   )}
-              </SChartsContainer>
-            </SDiagramSection>
+                </SChartsContainer>
+              </SDiagramSection>
+            </div>
           </SAnalysisRight>
         </SAnalysisContent>
       </SAnalysisContainer>

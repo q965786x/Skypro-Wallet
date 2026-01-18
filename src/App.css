@@ -41,6 +41,7 @@ body {
 
 .app {
   min-height: 100vh;
+  background-color: #f5f5f7;
 }
 
 /* Страницы авторизации */
@@ -136,6 +137,11 @@ body {
   html,
   body {
     font-size: 14px;
+    background-color: #ffffff;
+  }
+
+  .app {
+    background-color: #ffffff; /* Белый фон для мобильной версии */
   }
 
   /* Хедер */
@@ -167,6 +173,8 @@ body {
   /* Основной контент */
   .page {
     padding-top: 56px !important;
+    min-height: calc(100vh - 56px);
+    background-color: #ffffff;
   }
 
   .SMainContainer,
@@ -181,6 +189,10 @@ body {
   }
 
   /* Формы авторизации */
+  .auth-page {
+    background-color: #ffffff; /* Белый фон для мобильной версии */
+  }
+
   .SFormWrapper {
     padding: 16px !important;
   }
@@ -245,5 +257,37 @@ button {
   .BaseButton,
   .SSubmitBtn {
     font-size: 11px !important;
+  }
+}
+
+/* Для страницы авторизации */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f7;
+}
+
+@media (max-width: 768px) {
+  .auth-page {
+    min-height: 100vh;
+    padding-top: 56px; /* Высота header */
+    box-sizing: border-box;
+  }
+}
+
+/* Для страниц с Header */
+.page {
+  padding-top: 64px;
+  min-height: calc(100vh - 64px);
+  background-color: #f5f5f7;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding-top: 56px; /* Только высота Header */
+    min-height: calc(100vh - 56px);
+    background-color: #ffffff;
   }
 }
