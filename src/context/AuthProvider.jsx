@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import { AuthContext } from "./AuthContext";
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Добавляем состояние проверки
-  const hasRestoredSession = useRef(false); // Добавляем ref для отслеживания
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const hasRestoredSession = useRef(false);
 
   const login = useCallback((userData, userToken) => {
-    console.log("🔐 AuthProvider.login() вызван:", {
-      user: userData,
-      tokenLength: userToken?.length
-    });
-
     setUser(userData);
     setToken(userToken);
 
@@ -21,7 +22,6 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    console.log("🔐 AuthProvider.logout() вызван");
     setUser(null);
     setToken(null);
     localStorage.removeItem("user");
@@ -37,65 +37,45 @@ const AuthProvider = ({ children }) => {
     if (hasRestoredSession.current) return;
     hasRestoredSession.current = true;
 
-    console.log("🔐 Начинаю восстановление сессии...");
-
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
 
-    console.log("🔐 Найденные данные:", {
-      storedUser: storedUser ? "есть" : "нет",
-      storedToken: storedToken ? `есть (${storedToken.length} символов)` : "нет"
-    });    
-
-      if (
-        storedUser &&
-        storedToken &&
-        storedToken !== "null" &&
-        storedToken.trim() !== ""
-      ) {
-       try {
-        console.log("🔐 Восстанавливаю сессию из localStorage");
+    if (
+      storedUser &&
+      storedToken &&
+      storedToken !== "null" &&
+      storedToken.trim() !== ""
+    ) {
+      try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         setToken(storedToken);
-        console.log("🔐 Сессия восстановлена успешно");
-        } catch (e) {
-        console.error("❌ Ошибка при чтении данных пользователя:", e);
+      } catch (e) {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
-        }
-      } else {
-        console.log("🔐 Нет валидного токена в localStorage");
+      }
+    } else {
       if (storedToken === "null" || storedToken?.trim() === "") {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
-        }
       }
-      setIsCheckingAuth(false);
-   console.log("🔐 Проверка авторизации завершена");
+    }
+    setIsCheckingAuth(false);
   }, []);
-    
 
-  const value = useMemo(() => ({
-    user,
-    token,
-    login,
-    logout,
-    updateUserInfo,
-    isCheckingAuth,
-  }), [user, token, login, logout, updateUserInfo, isCheckingAuth]);
-
-  console.log("🔐 AuthProvider рендерится:", {
-    user: user ? "есть" : "нет",
-    token: token ? `есть (${token.length} символов)` : "нет",
-    isCheckingAuth
-  });
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      login,
+      logout,
+      updateUserInfo,
+      isCheckingAuth,
+    }),
+    [user, token, login, logout, updateUserInfo, isCheckingAuth],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

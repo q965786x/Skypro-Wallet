@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
 import { useMobile } from "../../hooks/useMobile.js";
+import { Navigate } from "react-router-dom";
 import {
   SAnalysisContainer,
   SAnalysisTitle,
@@ -42,6 +43,12 @@ import {
 } from "./Cost.styled.js";
 
 const Cost = () => {
+  const { isMobile } = useMobile();
+
+  if (isMobile) {
+    return <Navigate to="/analysis" replace />;
+  }
+
   const location = useLocation();
   const { token } = useAuth();
   const {
@@ -50,29 +57,22 @@ const Cost = () => {
     transactions: allTransactions,
   } = useContext(TransactionsContext);
 
-  // Ref для диаграмм
   const diagramsRef = useRef(null);
 
-  // Состояние для выбранного дня (по умолчанию сегодня)
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isWeeklyView, setIsWeeklyView] = useState(true);
 
-  // Состояния для календаря
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const calendarContentRef = useRef(null);
 
-  const { isMobile, isTablet } = useMobile();
-
   // Эффект для обработки якорных ссылок на диаграммы
   useEffect(() => {
     if (location.hash === "#diagrams" && diagramsRef.current) {
-      // Скроллим к диаграммам
       setTimeout(() => {
         diagramsRef.current.scrollIntoView({ behavior: "smooth" });
       }, 100);
 
-      // Убираем hash из URL
       window.history.replaceState(null, null, window.location.pathname);
     }
   }, [location]);
@@ -101,12 +101,10 @@ const Cost = () => {
     "Декабрь",
   ];
 
-  // Функция для парсинга даты транзакции
   const parseTransactionDate = useCallback((dateStr) => {
     if (!dateStr) return null;
 
     try {
-      // API возвращает даты в формате "2025-12-29T00:00:00.000Z"
       return new Date(dateStr);
     } catch (error) {
       console.error("Ошибка парсинга даты:", dateStr);
@@ -141,12 +139,6 @@ const Cost = () => {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      console.log("📅 Фильтрация транзакций:", {
-        start: start.toISOString(),
-        end: end.toISOString(),
-        allTransactions: allTransactions.length,
-      });
-
       const filtered = allTransactions.filter((transaction) => {
         try {
           const transactionDate = parseTransactionDate(transaction.date);
@@ -154,12 +146,10 @@ const Cost = () => {
 
           return transactionDate >= start && transactionDate <= end;
         } catch (error) {
-          console.error("Ошибка фильтрации транзакции:", transaction, error);
           return false;
         }
       });
 
-      console.log("📅 Отфильтровано:", filtered.length, "транзакций");
       return filtered;
     },
     [allTransactions, parseTransactionDate],
@@ -168,7 +158,6 @@ const Cost = () => {
   // Получаем транзакции для выбранного периода
   const transactionsForSelectedPeriod = useMemo(() => {
     if (!selectedDay || !allTransactions || allTransactions.length === 0) {
-      console.log("📅 Нет данных для фильтрации");
       return [];
     }
 
@@ -213,17 +202,14 @@ const Cost = () => {
       Другое: "#FFB9B8",
     };
 
-    // Считаем сумму по категориям
     const categorySums = {};
 
-    // API возвращает массив транзакций напрямую
     transactionsForPeriod.forEach((transaction) => {
       const russianCategory = categoryMap[transaction.category] || "Другое";
       categorySums[russianCategory] =
         (categorySums[russianCategory] || 0) + transaction.sum;
     });
 
-    // Возвращаем все категории
     return Object.keys(categoryMap).map((key) => {
       const categoryName = categoryMap[key];
       return {
@@ -265,7 +251,6 @@ const Cost = () => {
     }
   };
 
-  // Форматирование заголовка периода
   const getPeriodTitle = () => {
     if (isWeeklyView) {
       const { monday, sunday } = getWeekRange(selectedDay);
@@ -325,38 +310,6 @@ const Cost = () => {
     0,
   );
   const maxAmount = Math.max(...categories.map((c) => c.amount), 1);
-
-  // Логирование для отладки
-  useEffect(() => {
-    console.log("📊 Диаграмма данные:", {
-      selectedDay: selectedDay.toISOString(),
-      isWeeklyView,
-      allTransactionsCount: allTransactions?.length || 0,
-      filteredCount: transactionsForSelectedPeriod.length,
-      categories: categories.map((c) => `${c.name}: ${c.amount} ₽`),
-      totalAmount,
-    });
-  }, [
-    selectedDay,
-    isWeeklyView,
-    allTransactions,
-    transactionsForSelectedPeriod,
-    categories,
-    totalAmount,
-  ]);
-
-  if (isLoading) {
-    return (
-      <div className="page">
-        <SAnalysisContainer>
-          <SAnalysisTitle>Анализ расходов</SAnalysisTitle>
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            Загрузка данных...
-          </div>
-        </SAnalysisContainer>
-      </div>
-    );
-  }
 
   // Генерируем дни для отображения
   const currentMonthDays = generateMonthDays(currentYear, currentMonth);
@@ -458,7 +411,6 @@ const Cost = () => {
             </button>
             <button
               onClick={() => {
-                console.log("🔄 Принудительно синхронизирую...");
                 refetchTransactions();
               }}
               style={{
@@ -556,7 +508,7 @@ const Cost = () => {
                           return (
                             <SDay
                               key={`${currentYear}-${currentMonth}-${day}`}
-                              $selected={isSelected} // ТОЛЬКО isSelected, убрать $active
+                              $selected={isSelected}
                               onClick={() =>
                                 handleDayClick(day, currentMonth, currentYear)
                               }
@@ -612,7 +564,7 @@ const Cost = () => {
                           return (
                             <SDay
                               key={`${nextYear}-${nextMonth}-${day}`}
-                              $selected={isSelected} // ТОЛЬКО isSelected, убрать $active
+                              $selected={isSelected}
                               onClick={() =>
                                 handleDayClick(day, nextMonth, nextYear)
                               }

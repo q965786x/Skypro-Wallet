@@ -24,7 +24,6 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Определяем мобильное устройство
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -36,29 +35,72 @@ const Header = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const isExpensesPage = location.pathname === "/expenses";
-  const isAnalysisPage = location.pathname === "/analysis";
+  const getCurrentPage = () => {
+    const path = location.pathname;
+
+    if (
+      path === "/expenses" ||
+      (path.startsWith("/expenses") && !path.includes("new"))
+    ) {
+      return "expenses"; // MainMobile
+    }
+
+    if (path === "/expenses/new") {
+      return "new-expense"; // NewExpenseMobile
+    }
+
+    if (
+      path === "/analysis" ||
+      path === "/analysis/diagrams" ||
+      path === "/analysis/calendar" ||
+      path.includes("/analysis")
+    ) {
+      return "analysis"; // CostDiagramsMobile, CostCalendarMobile
+    }
+
+    return "expenses";
+  };
+
+  // Функция для получения текста навигации в зависимости от страницы
+  const getNavTextForPage = (page) => {
+    switch (page) {
+      case "expenses":
+        return "Мои расходы";
+      case "new-expense":
+        return "Новый расход";
+      case "analysis":
+        return "Анализ расходов";
+      default:
+        return "Мои расходы";
+    }
+  };
+
+  // Функция для получения активного класса
+  const isActivePage = (page) => {
+    return getCurrentPage() === page;
+  };
+
+  const currentPage = getCurrentPage();
+  const currentNavText = getNavTextForPage(currentPage);
 
   const handleLogout = () => {
     logout();
     navigate("/sign-in");
   };
 
-  // Обработчик для "Мои расходы"
+  // Обработчики для навигации
   const handleExpensesClick = () => {
     navigate("/expenses");
     setIsDropdownOpen(false);
   };
 
-  // Обработчик для "Новый расход"
   const handleNewExpenseClick = () => {
-    navigate("/expenses#new-expense");
+    navigate("/expenses/new");
     setIsDropdownOpen(false);
   };
 
-  // Обработчик для "Анализ расходов"
   const handleAnalysisClick = () => {
-    navigate("/analysis#diagrams");
+    navigate("/analysis/diagrams");
     setIsDropdownOpen(false);
   };
 
@@ -67,12 +109,14 @@ const Header = () => {
     setIsDropdownOpen(false);
   };
 
-  // Определяем текущий выбранный пункт
+  // Получаем текст для выпадающего меню
   const getCurrentNavText = () => {
-    if (isExpensesPage) return "Мои расходы";
-    if (isAnalysisPage) return "Анализ расходов";
-    return "Мои расходы"; // по умолчанию
+    return currentNavText;
   };
+
+  // Определяем, является ли текущая страница активной для выделения
+  const isExpensesActive = isActivePage("expenses");
+  const isAnalysisActive = isActivePage("analysis");
 
   return (
     <>
@@ -84,7 +128,6 @@ const Header = () => {
               src="/images/logo.png"
               alt="Skypro.Wallet"
               onError={(e) => {
-                // Fallback если изображение не загрузилось
                 e.target.style.display = "none";
                 e.target.parentNode.innerHTML =
                   '<span style="font-weight: 700; color: #7334ea; font-size: 18px;">Skypro.Wallet</span>';
@@ -97,18 +140,18 @@ const Header = () => {
             <SNavLink
               as={Link}
               to="/expenses"
-              className={isExpensesPage ? "active" : ""}
+              className={isExpensesActive ? "active" : ""}
             >
               Мои расходы
-              {isExpensesPage && <span className="nav-dot">●</span>}
+              {isExpensesActive && <span className="nav-dot">●</span>}
             </SNavLink>
             <SNavLink
               as={Link}
-              to="/analysis"
-              className={isAnalysisPage ? "active" : ""}
+              to="/analysis/diagrams"
+              className={isAnalysisActive ? "active" : ""}
             >
               Анализ расходов
-              {isAnalysisPage && <span className="nav-dot">●</span>}
+              {isAnalysisActive && <span className="nav-dot">●</span>}
             </SNavLink>
           </SHeaderNav>
 
@@ -117,7 +160,7 @@ const Header = () => {
             <SMobileNavDropdown>
               <SMobileNavButton
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                $active={isExpensesPage || isAnalysisPage}
+                $active={isExpensesActive || isAnalysisActive}
               >
                 {getCurrentNavText()}
                 <SMobileNavTriangle $open={isDropdownOpen}>
@@ -139,21 +182,21 @@ const Header = () => {
           <SMobileNavModalOverlay onClick={() => setIsDropdownOpen(false)} />
           <SMobileNavModal>
             <SMobileNavModalItem
-              $active={isExpensesPage}
+              $active={isExpensesActive}
               $variant="primary"
               onClick={handleExpensesClick}
             >
               Мои расходы
             </SMobileNavModalItem>
             <SMobileNavModalItem
-              $active={false}
+              $active={isActivePage("new-expense")}
               $variant="secondary"
               onClick={handleNewExpenseClick}
             >
               Новый расход
             </SMobileNavModalItem>
             <SMobileNavModalItem
-              $active={isAnalysisPage}
+              $active={isAnalysisActive}
               $variant="secondary"
               onClick={handleAnalysisClick}
             >

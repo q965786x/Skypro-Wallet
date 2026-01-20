@@ -4,24 +4,32 @@ export const SMainContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 64px 40px 40px;
+
+  @media (max-width: 480px) {
+    max-width: 375px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
 `;
 
 export const SPageTitle = styled.h2`
   font-weight: 700;
-  font-size: 32px;
-  margin-bottom: 32px;
+  font-size: 24px;
+  margin-bottom: 12px;
   color: #000000;
 `;
 
 export const SFormsContainer = styled.div`
   display: flex;
   gap: 34px;
-  align-items: flex-start; 
+  align-items: flex-start;
 
   @media (max-width: 1024px) {
     gap: 20px;
   }
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 16px;
@@ -63,11 +71,22 @@ export const STableForm = styled.div`
     height: 500px;
     padding: 24px;
   }
-  
+
   @media (max-width: 768px) {
-    height: 400px;
     padding: 16px;
     border-radius: 20px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
   }
 `;
 
@@ -82,7 +101,7 @@ export const STableTitle = styled.h3`
 
 export const STableWrapper = styled.div`
   flex: 1;
-  overflow-y: auto; 
+  overflow-y: auto;
   overflow-x: hidden;
   padding: 0 24px 24px 24px;
 
@@ -111,41 +130,60 @@ export const STable = styled.table`
   table-layout: fixed;
 
   thead {
-    background-color: transparent;
-    position: sticky;
-    top: 0;
     background-color: #ffffff;
-    z-index: 1;
   }
 
   th {
-    padding: 6px 12px;
+    padding: 12px 8px;
     text-align: left;
     font-weight: 400;
     font-size: 12px;
     color: #999999;
     border-bottom: 1px solid #e5e5e7;
+    background-color: #ffffff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   td {
-    padding: 6px 12px;
+    padding: 12px 8px;
     text-align: left;
     font-weight: 400;
     font-size: 12px;
     color: #000000;
-    gap: 14px;
     border-bottom: 1px solid #e5e5e7;
-    background-color: #ffffff;
+    background-color: inherit;
+    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    &:first-child {
+      width: 40%;
+    }
+
+    &:nth-child(2) {
+      width: 20%;
+    }
+
+    &:nth-child(3) {
+      width: 20%;
+    }
+
+    &:last-child {
+      width: 20%;
+      text-align: right;
+    }
   }
 
-  tbody tr:hover {
-    background-color: #f9f9fa;
+  tbody tr {
+    background-color: #ffffff;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
   }
 
   tbody tr:last-child td {
@@ -153,38 +191,43 @@ export const STable = styled.table`
   }
 
   @media (max-width: 768px) {
-    font-size: 12px;
-    
-    th, td {
+    th,
+    td {
       padding: 8px 4px;
       font-size: 12px;
     }
-    
-    td:nth-child(1), th:nth-child(1) {
+
+    td:nth-child(1),
+    th:nth-child(1) {
       max-width: 120px;
     }
-    
-    td:nth-child(2), th:nth-child(2) {
+
+    td:nth-child(2),
+    th:nth-child(2) {
       max-width: 80px;
     }
-    
-    td:nth-child(3), th:nth-child(3) {
+
+    td:nth-child(3),
+    th:nth-child(3) {
       max-width: 70px;
     }
-    
-    td:nth-child(4), th:nth-child(4) {
+
+    td:nth-child(4),
+    th:nth-child(4) {
       max-width: 80px;
     }
-    
-    td:nth-child(5), th:nth-child(5) {
+
+    td:nth-child(5),
+    th:nth-child(5) {
       max-width: 40px;
     }
   }
-  
+
   @media (max-width: 480px) {
-    th, td {
-      padding: 6px 2px;
-      font-size: 10px;
+    th,
+    td {
+      padding: 8px 4px;
+      font-size: 12px;
     }
   }
 `;
@@ -238,7 +281,7 @@ export const SNewExpenseForm = styled.div`
     min-height: 500px;
     padding: 24px;
   }
-  
+
   @media (max-width: 768px) {
     padding: 16px;
     border-radius: 20px;
@@ -263,7 +306,7 @@ export const SFormLabel = styled.label`
   font-weight: 600;
   font-size: 16px;
   color: #000000;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 `;
 
 export const SFormInput = styled.input`
@@ -386,7 +429,7 @@ export const SSubmitBtn = styled.button`
     cursor: not-allowed;
     transform: none;
   }
-  
+
   @media (max-width: 768px) {
     height: 42px;
     font-size: 12px;
@@ -395,26 +438,27 @@ export const SSubmitBtn = styled.button`
 
 export const SMobileTable = styled.div`
   display: none;
-  
+
   @media (max-width: 768px) {
     display: block;
   }
 `;
 
 export const SMobileTransaction = styled.div`
-  background: #ffffff;
-  border: 1px solid #e5e5e7;
+  background: ${(props) => (props.$selected ? "#f1ebfd" : "#ffffff")};
+  border: 1px solid ${(props) => (props.$selected ? "#7334ea" : "#e5e5e7")};
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 8px;
-  
+  cursor: pointer;
+
   .mobile-transaction-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 8px;
   }
-  
+
   .mobile-transaction-category {
     font-size: 12px;
     color: #7334ea;
@@ -422,57 +466,109 @@ export const SMobileTransaction = styled.div`
     padding: 2px 8px;
     border-radius: 12px;
   }
-  
+
   .mobile-transaction-description {
     font-weight: 500;
     margin-bottom: 4px;
     word-break: break-word;
   }
-  
+
   .mobile-transaction-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 8px;
   }
-  
+
   .mobile-transaction-date {
     font-size: 11px;
     color: #999;
   }
-  
+
   .mobile-transaction-amount {
     font-weight: 600;
     color: #000;
   }
 `;
 
-export const SViewSelector = styled.div`
+// Стили для страницы MainMobile
+export const SHeaderRow = styled.div`
   display: flex;
-  margin-bottom: 16px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e5e5e7;
-  background-color: #f4f5f6;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+
+  h2 {
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0;
+    color: #000000;
+  }
 `;
 
-export const SToggleViewButton = styled.button`
-  flex: 1;
-  padding: 12px 16px;
+export const SAddNewButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 500;
+  background: none;
   border: none;
-  background-color: ${props => props.$active ? '#f1ebfd' : 'transparent'};
-  color: ${props => props.$active ? '#7334ea' : '#000000'};
-  font-size: 14px;
-  font-weight: ${props => props.$active ? '600' : '400'};
   cursor: pointer;
-  text-align: center;
+  padding: 8px 0;
+
+  img {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+export const SDeleteExpenseButton = styled.button`
+  width: 100%;
+  height: 42px;
+  background-color: #7334ea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  //cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  cursor: pointer;
+  margin-top: 24px;
+  margin-bottom: 24px;
   transition: all 0.3s ease;
-  
+
   &:hover {
-    background-color: ${props => props.$active ? '#e8dffb' : '#e8e8e8'};
+    background-color: #5a2bb8;
   }
-  
-  &:first-child {
-    border-right: 1px solid #e5e5e7;
+
+  &:active {
+    transform: scale(0.98);
   }
+`;
+
+// Стили для страницы NewExpenseMobile
+export const SHeaderWithBack = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+  width: fit-content;
+`;
+
+export const SBackIcon = styled.img`
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+`;
+
+export const SBackTitle = styled.h2`
+  font-weight: 600;
+  font-size: 12px;
+  color: #000000;
+  margin: 0;
+  line-height: 1;
 `;

@@ -1,14 +1,21 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useMobile } from "../hooks/useMobile";
 import SignInPage from "../pages/SignInPage";
 import SignUpPage from "../pages/SignUpPage";
+import Header from "./Header/Header";
 import Main from "./Main/Main";
 import Cost from "./Cost/Cost";
-import Header from "./Header/Header";
+import MainMobile from "../components/Main/MainMobile";
+import NewExpenseMobile from "../components/Main/NewExpenseMobile";
+import CostCalendarMobile from "../components/Cost/CostCalendarMobile";
+import CostDiagramsMobile from "../components/Cost/CostDiagramsMobile";
+
 
 function AppRoutes() {
   const { token, isCheckingAuth } = useAuth();
+  const { isMobile } = useMobile();
 
   if (isCheckingAuth) {
     return <div>Загрузка...</div>;
@@ -30,13 +37,25 @@ function AppRoutes() {
 
         {/* Защищенные маршруты */}
         <Route path="/" element={<Navigate to="/expenses" />} />
+
+        {/* Маршруты для расходов */}
         <Route
           path="/expenses"
-          element={token ? <Main /> : <Navigate to="/sign-in" />}
+          element={token ? (isMobile ? <MainMobile /> : <Main />) : <Navigate to="/sign-in" />}
         />
         <Route
+          path="/expenses/new"
+          element={token ? (isMobile ? <NewExpenseMobile /> : <Navigate to="/expenses" />) : <Navigate to="/sign-in" />}
+        />
+
+        {/* Маршруты для анализа */}
+        <Route
           path="/analysis"
-          element={token ? <Cost /> : <Navigate to="/sign-in" />}
+          element={token ? (isMobile ? <CostCalendarMobile /> : <Cost />) : <Navigate to="/sign-in" />}
+        />
+        <Route
+          path="/analysis/diagrams"
+          element={token ? (isMobile ? <CostDiagramsMobile /> : <Navigate to="/analysis" />) : <Navigate to="/sign-in" />}
         />
 
         {/* Перенаправление */}

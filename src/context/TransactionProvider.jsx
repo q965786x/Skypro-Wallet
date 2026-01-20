@@ -5,7 +5,6 @@ import React, {
   useCallback,
   useMemo,
   useRef,
-  useDebugValue,
 } from "react";
 import { AuthContext } from "./AuthContext";
 import { TransactionsContext } from "./TransactionContext";
@@ -18,29 +17,22 @@ import {
 } from "../services/api";
 
 const TransactionProvider = ({ children }) => {
-  // Для отладки StrictMode
-  useDebugValue("TransactionProvider");
-
   const { token, isCheckingAuth } = useContext(AuthContext);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const abortControllerRef = useRef(null); // Для отмены запросов
-  const previousTokenRef = useRef(null); // Для отслеживания изменений токена
+  const abortControllerRef = useRef(null);
+  const previousTokenRef = useRef(null);
 
   const componentId = useRef(Math.random().toString(36).substr(2, 9));
-  const hasLoadedInitialData = useRef(false); // Флаг для отслеживания начальной загрузки
+  const hasLoadedInitialData = useRef(false);
   const isMountedRef = useRef(true);
 
   // Инициализация при монтировании
   useEffect(() => {
-    console.log("🎯 TransactionProvider инициализирован");
-
     return () => {
-      console.log("🎯 TransactionProvider размонтирован");
       isMountedRef.current = false;
 
-      // Отменяем все активные запросы при размонтировании
       if (abortControllerRef.current) {
         abortControllerRef.current.abort("Компонент размонтирован");
       }
@@ -55,21 +47,15 @@ const TransactionProvider = ({ children }) => {
   const loadTransactions = useCallback(async () => {
     if (!isMountedRef.current) return;
 
-    // Если идет проверка авторизации - ждем
     if (isCheckingAuth) {
-      console.log("⏳ Ожидаю завершения проверки авторизации...");
       return;
     }
 
-    console.log("🔄 loadTransactions вызван, token:", token ? "есть" : "нет");
-
-    // Отменяем предыдущий запрос, если он существует
     if (abortControllerRef.current) {
       abortControllerRef.current.abort("Новый запрос начат");
     }
 
     if (!token) {
-      console.log("🔄 Нет токена, очищаю транзакции");
       if (isMountedRef.current) {
         setTransactions([]);
         setIsLoading(false);
@@ -77,7 +63,6 @@ const TransactionProvider = ({ children }) => {
       return;
     }
 
-    // Создаем новый AbortController для этого запроса
     abortControllerRef.current = new AbortController();
     const currentAbortController = abortControllerRef.current;
 
@@ -87,16 +72,11 @@ const TransactionProvider = ({ children }) => {
         setError("");
       }
 
-      console.log("🔄 Загружаю транзакции...");
-
       const result = await fetchTransactions({
         token,
         signal: abortControllerRef.current.signal,
       });
 
-      console.log("🔄 Получены транзакции:", result?.length || 0);
-
-      // Извлекаем массив транзакций из результата
       let transactionsArray = [];
 
       if (result && result.transactions && Array.isArray(result.transactions)) {
@@ -105,14 +85,11 @@ const TransactionProvider = ({ children }) => {
         transactionsArray = result;
       }
 
-      console.log("🔄 Устанавливаю", transactionsArray.length, "транзакций");
-
       if (isMountedRef.current) {
         setTransactions(transactionsArray);
         hasLoadedInitialData.current = true;
       }
     } catch (error) {
-      // Игнорируем ошибки отмены запроса
       if (
         error.name === "CanceledError" ||
         error.name === "AbortError" ||
@@ -122,20 +99,15 @@ const TransactionProvider = ({ children }) => {
         error.message === "Новый запрос начат" ||
         error.message === "Компонент размонтирован"
       ) {
-        console.log("Запрос отменен:", error.message);
         return;
       }
 
-      console.error("❌ Ошибка загрузки транзакций:", error);
-
       if (!isMountedRef.current) return;
 
-      // Если ошибка 401 (Unauthorized) - очищаем состояние
       if (
         error.message.includes("Сессия истекла") ||
         error.message.includes("401")
       ) {
-        console.log("🚫 Сессия истекла, очищаю данные");
         setTransactions([]);
         setError("Сессия истекла. Пожалуйста, войдите снова.");
       } else {
@@ -157,20 +129,15 @@ const TransactionProvider = ({ children }) => {
     };
   }, []);
 
-  // Загружаем транзакции только при изменении токена
   useEffect(() => {
-    // Если идет проверка авторизации - ждем
     if (isCheckingAuth) {
-      console.log("⏳ Пропускаю загрузку, идет проверка авторизации");
       return;
     }
-    // Если токен изменился или мы еще не загружали данные
+
     if (token !== previousTokenRef.current || !hasLoadedInitialData.current) {
-      console.log("🔄 Токен изменился или данные не загружены, загружаю...");
       previousTokenRef.current = token;
       hasLoadedInitialData.current = true;
 
-      // Небольшая задержка для стабильности
       const timeoutId = setTimeout(() => {
         loadTransactions();
       }, 100);
@@ -188,25 +155,18 @@ const TransactionProvider = ({ children }) => {
       }
 
       try {
-        console.log("📤 addNewTransaction вызван с данными:", transactionData);
-
-        // Сохраняем результат в переменную
         const result = await postTransaction({
           token,
           transaction: transactionData,
         });
 
-        console.log("📤 Результат postTransaction:", result);
-
         if (result) {
-          // После успешного добавления загружаем обновленный список
           await loadTransactions();
           return true;
         }
 
         return false;
       } catch (err) {
-        console.error("❌ Ошибка в addNewTransaction:", err);
         setError(err.message || "Ошибка создания транзакции");
         return false;
       }
@@ -252,7 +212,6 @@ const TransactionProvider = ({ children }) => {
         await loadTransactions();
         return true;
       } catch (error) {
-        console.error("❌ Ошибка удаления:", error);
         setError(error.message || "Ошибка удаления транзакции");
         return false;
       }

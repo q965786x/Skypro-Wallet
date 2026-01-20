@@ -348,3 +348,4 @@ export const SChartCategory = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
+

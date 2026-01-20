@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
 import { useMobile } from "../../hooks/useMobile.js";
+import { Navigate } from "react-router-dom";
 import {
   SMainContainer,
   SPageTitle,
@@ -37,7 +38,6 @@ import {
   SMobileTransaction,
 } from "./Main.styled.js";
 
-// Маппинг категорий для API
 const CATEGORY_MAPPING = {
   Еда: "food",
   Транспорт: "transport",
@@ -57,6 +57,12 @@ const REVERSE_CATEGORY_MAPPING = {
 };
 
 const Main = () => {
+  const { isMobile } = useMobile();
+
+  if (isMobile) {
+    return <Navigate to="/expenses" replace />;
+  }
+
   const location = useLocation();
   const { token } = useAuth();
   const {
@@ -68,13 +74,11 @@ const Main = () => {
     refetchTransactions,
   } = useContext(TransactionsContext);
 
-  // Состояния формы
   const [selectedCategory, setSelectedCategory] = useState("Еда");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isMobile, isTablet } = useMobile();
 
   const categories = [
     { name: "Еда", icon: "/images/category-food.svg" },
@@ -85,29 +89,24 @@ const Main = () => {
     { name: "Другое", icon: "/images/category-other.svg" },
   ];
 
-  // Ref для формы нового расхода
   const newExpenseFormRef = useRef(null);
 
   // Эффект для обработки якорных ссылок
   useEffect(() => {
     if (location.hash === "#new-expense" && newExpenseFormRef.current) {
-      // Скроллим к форме нового расхода
       setTimeout(() => {
         newExpenseFormRef.current.scrollIntoView({ behavior: "smooth" });
       }, 100);
 
-      // Убираем hash из URL чтобы при обновлении страницы не скроллилось
       window.history.replaceState(null, null, window.location.pathname);
     }
   }, [location]);
 
-  // Устанавливаем сегодняшнюю дату по умолчанию при загрузке
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setDate(today);
   }, []);
 
-  // Сортировка транзакций
   const sortedTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
@@ -117,11 +116,11 @@ const Main = () => {
       return [...transactions].sort((a, b) => {
         const dateA = a.date ? new Date(a.date) : new Date(0);
         const dateB = b.date ? new Date(b.date) : new Date(0);
-        return dateB - dateA; // новые сверху
+        return dateB - dateA;
       });
     } catch (e) {
       console.error("❌ Ошибка сортировки:", e);
-      return transactions; // Возвращаем как есть в случае ошибки
+      return transactions;
     }
   }, [transactions]);
 
@@ -134,7 +133,6 @@ const Main = () => {
         return;
       }
 
-      // Валидация
       if (!description.trim() || description.trim().length < 4) {
         alert("Введите описание расхода (минимум 4 символа)");
         return;
@@ -153,13 +151,11 @@ const Main = () => {
       setIsSubmitting(true);
 
       try {
-        // Преобразуем дату в формат для API
         const formatDateForAPI = (dateStr) => {
           const [year, month, day] = dateStr.split("-");
           return `${parseInt(month)}-${parseInt(day)}-${year}`;
         };
 
-        // Формируем объект транзакции
         const transactionData = {
           description: description.trim(),
           sum: parseFloat(amount),
@@ -169,11 +165,9 @@ const Main = () => {
 
         console.log("📤 Main.jsx: Отправляю транзакцию:", transactionData);
 
-        // Используем метод из контекста
         const success = await addNewTransaction(transactionData);
 
         if (success) {
-          // Очистка формы
           setDescription("");
           setDate(new Date().toISOString().split("T")[0]);
           setAmount("");
@@ -183,7 +177,6 @@ const Main = () => {
           alert("Ошибка при добавлении транзакции");
         }
       } catch (err) {
-        console.error("❌ Ошибка:", err);
         alert(err.message || "Ошибка при добавлении транзакции");
       } finally {
         setIsSubmitting(false);
@@ -204,7 +197,6 @@ const Main = () => {
           alert("Ошибка при удалении транзакции");
         }
       } catch (err) {
-        console.error("❌ Main.jsx: Ошибка удаления:", err);
         alert(err.message || "Ошибка при удалении транзакции");
       }
     },
@@ -215,22 +207,18 @@ const Main = () => {
     if (!dateStr) return "Без даты";
 
     try {
-      // Просто создаем Date объект - он сам разберет ISO формат
       const date = new Date(dateStr);
 
-      // Проверяем валидность
       if (isNaN(date.getTime())) {
         return dateStr;
       }
 
-      // Форматируем в русский формат
       return date.toLocaleDateString("ru-RU", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
     } catch (error) {
-      // В случае ошибки возвращаем оригинальную строку
       return dateStr;
     }
   };
@@ -239,7 +227,6 @@ const Main = () => {
     return new Intl.NumberFormat("ru-RU").format(amount) + " ₽";
   };
 
-  // Разделяем категории на ряды по 2 кнопки
   const categoryRows = [];
   for (let i = 0; i < categories.length; i += 2) {
     categoryRows.push(categories.slice(i, i + 2));
