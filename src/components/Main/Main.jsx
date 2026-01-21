@@ -1,6 +1,16 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
+import { useMobile } from "../../hooks/useMobile.js";
+import { Navigate } from "react-router-dom";
 import {
   SMainContainer,
   SPageTitle,
@@ -24,9 +34,10 @@ import {
   SCategoryIcon,
   SCategoryContent,
   SCategoryRow,
+  SMobileTable,
+  SMobileTransaction,
 } from "./Main.styled.js";
 
-// Маппинг категорий для API
 const CATEGORY_MAPPING = {
   Еда: "food",
   Транспорт: "transport",
@@ -46,6 +57,13 @@ const REVERSE_CATEGORY_MAPPING = {
 };
 
 const Main = () => {
+  const { isMobile } = useMobile();
+
+  if (isMobile) {
+    return <Navigate to="/expenses" replace />;
+  }
+
+  const location = useLocation();
   const { token } = useAuth();
   const {
     transactions,
@@ -56,7 +74,6 @@ const Main = () => {
     refetchTransactions,
   } = useContext(TransactionsContext);
 
-  // Состояния формы
   const [selectedCategory, setSelectedCategory] = useState("Еда");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -72,13 +89,24 @@ const Main = () => {
     { name: "Другое", icon: "/images/category-other.svg" },
   ];
 
-  // Устанавливаем сегодняшнюю дату по умолчанию при загрузке
+  const newExpenseFormRef = useRef(null);
+
+  // Эффект для обработки якорных ссылок
+  useEffect(() => {
+    if (location.hash === "#new-expense" && newExpenseFormRef.current) {
+      setTimeout(() => {
+        newExpenseFormRef.current.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      window.history.replaceState(null, null, window.location.pathname);
+    }
+  }, [location]);
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setDate(today);
   }, []);
 
-  // Сортировка транзакций
   const sortedTransactions = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
@@ -88,11 +116,11 @@ const Main = () => {
       return [...transactions].sort((a, b) => {
         const dateA = a.date ? new Date(a.date) : new Date(0);
         const dateB = b.date ? new Date(b.date) : new Date(0);
-        return dateB - dateA; // новые сверху
+        return dateB - dateA;
       });
     } catch (e) {
       console.error("❌ Ошибка сортировки:", e);
-      return transactions; // Возвращаем как есть в случае ошибки
+      return transactions;
     }
   }, [transactions]);
 
@@ -105,7 +133,6 @@ const Main = () => {
         return;
       }
 
-      // Валидация
       if (!description.trim() || description.trim().length < 4) {
         alert("Введите описание расхода (минимум 4 символа)");
         return;
@@ -124,25 +151,23 @@ const Main = () => {
       setIsSubmitting(true);
 
       try {
-        // Форматируем дату для API (MM-DD-YYYY)
-        const [year, month, day] = date.split("-");
-        const apiDate = `${parseInt(month)}-${parseInt(day)}-${year}`;
+        const formatDateForAPI = (dateStr) => {
+          const [year, month, day] = dateStr.split("-");
+          return `${parseInt(month)}-${parseInt(day)}-${year}`;
+        };
 
-        // Формируем объект транзакции
         const transactionData = {
           description: description.trim(),
           sum: parseFloat(amount),
           category: CATEGORY_MAPPING[selectedCategory],
-          date: apiDate,
+          date: formatDateForAPI(date),
         };
 
         console.log("📤 Main.jsx: Отправляю транзакцию:", transactionData);
 
-        // Используем метод из контекста
         const success = await addNewTransaction(transactionData);
 
         if (success) {
-          // Очистка формы
           setDescription("");
           setDate(new Date().toISOString().split("T")[0]);
           setAmount("");
@@ -152,13 +177,12 @@ const Main = () => {
           alert("Ошибка при добавлении транзакции");
         }
       } catch (err) {
-        console.error("❌ Ошибка:", err);
         alert(err.message || "Ошибка при добавлении транзакции");
       } finally {
         setIsSubmitting(false);
       }
     },
-    [token, description, amount, date, selectedCategory, addNewTransaction]
+    [token, description, amount, date, selectedCategory, addNewTransaction],
   );
 
   const handleDelete = useCallback(
@@ -173,33 +197,28 @@ const Main = () => {
           alert("Ошибка при удалении транзакции");
         }
       } catch (err) {
-        console.error("❌ Main.jsx: Ошибка удаления:", err);
         alert(err.message || "Ошибка при удалении транзакции");
       }
     },
-    [removeTransaction]
+    [removeTransaction],
   );
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Без даты";
 
     try {
-      // Просто создаем Date объект - он сам разберет ISO формат
       const date = new Date(dateStr);
 
-      // Проверяем валидность
       if (isNaN(date.getTime())) {
         return dateStr;
       }
 
-      // Форматируем в русский формат
       return date.toLocaleDateString("ru-RU", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
     } catch (error) {
-      // В случае ошибки возвращаем оригинальную строку
       return dateStr;
     }
   };
@@ -208,7 +227,6 @@ const Main = () => {
     return new Intl.NumberFormat("ru-RU").format(amount) + " ₽";
   };
 
-  // Разделяем категории на ряды по 2 кнопки
   const categoryRows = [];
   for (let i = 0; i < categories.length; i += 2) {
     categoryRows.push(categories.slice(i, i + 2));
@@ -326,101 +344,140 @@ const Main = () => {
                     )}
                   </tbody>
                 </STable>
+
+                {isMobile && sortedTransactions.length > 0 ? (
+                  <SMobileTable>
+                    {sortedTransactions.map((transaction) => (
+                      <SMobileTransaction key={transaction._id}>
+                        <div className="mobile-transaction-header">
+                          <div className="mobile-transaction-description">
+                            {transaction.description}
+                          </div>
+                          <div className="mobile-transaction-category">
+                            {REVERSE_CATEGORY_MAPPING[transaction.category] ||
+                              transaction.category}
+                          </div>
+                        </div>
+
+                        <div className="mobile-transaction-footer">
+                          <div className="mobile-transaction-date">
+                            {formatDate(transaction.date)}
+                          </div>
+                          <div className="mobile-transaction-amount">
+                            {formatAmount(transaction.sum)}
+                          </div>
+                          <SDeleteBtn
+                            onClick={() => handleDelete(transaction._id)}
+                            style={{ padding: "4px" }}
+                          >
+                            <SDeleteIcon src="/images/bag.svg" alt="Удалить" />
+                          </SDeleteBtn>
+                        </div>
+                      </SMobileTransaction>
+                    ))}
+                  </SMobileTable>
+                ) : null}
               </STableWrapper>
             </STableForm>
           </SLeftColumn>
 
           <SRightColumn>
-            {/* Форма "Новый расход" */}
-            <SNewExpenseForm>
-              <SNewExpenseFormTitle>Новый расход</SNewExpenseFormTitle>
-              <form id="expense-form" onSubmit={handleSubmit}>
-                <SFormGroup>
-                  <SFormLabel htmlFor="description">Описание</SFormLabel>
-                  <SFormInput
-                    type="text"
-                    id="description"
-                    placeholder="Введите описание"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+            {/* Форма "Новый расход" с якорем */}
+            <div id="new-expense-form" ref={newExpenseFormRef}>
+              <SNewExpenseForm>
+                <SNewExpenseFormTitle>Новый расход</SNewExpenseFormTitle>
+                <form id="expense-form" onSubmit={handleSubmit}>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="description">Описание</SFormLabel>
+                    <SFormInput
+                      type="text"
+                      id="description"
+                      placeholder="Введите описание"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel>Категория</SFormLabel>
-                  <SCategoryButtons>
-                    {categoryRows.map((row, rowIndex) => (
-                      <SCategoryRow key={rowIndex}>
-                        {row.map((category) => (
-                          <SCategoryBtn
-                            key={category.name}
-                            type="button"
-                            className={
-                              selectedCategory === category.name ? "active" : ""
-                            }
-                            onClick={() => setSelectedCategory(category.name)}
-                            disabled={isSubmitting}
-                          >
-                            <SCategoryIcon
-                              src={category.icon}
-                              alt={category.name}
-                            />
-                            <SCategoryContent>{category.name}</SCategoryContent>
-                          </SCategoryBtn>
-                        ))}
-                      </SCategoryRow>
-                    ))}
-                  </SCategoryButtons>
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel>Категория</SFormLabel>
+                    <SCategoryButtons>
+                      {categoryRows.map((row, rowIndex) => (
+                        <SCategoryRow key={rowIndex}>
+                          {row.map((category) => (
+                            <SCategoryBtn
+                              key={category.name}
+                              type="button"
+                              className={
+                                selectedCategory === category.name
+                                  ? "active"
+                                  : ""
+                              }
+                              onClick={() => setSelectedCategory(category.name)}
+                              disabled={isSubmitting}
+                            >
+                              <SCategoryIcon
+                                src={category.icon}
+                                alt={category.name}
+                              />
+                              <SCategoryContent>
+                                {category.name}
+                              </SCategoryContent>
+                            </SCategoryBtn>
+                          ))}
+                        </SCategoryRow>
+                      ))}
+                    </SCategoryButtons>
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel htmlFor="date">Дата</SFormLabel>
-                  <SFormInput
-                    type="date"
-                    id="date"
-                    placeholder="Введите дату"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="date">Дата</SFormLabel>
+                    <SFormInput
+                      type="date"
+                      id="date"
+                      placeholder="Введите дату"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SFormGroup>
-                  <SFormLabel htmlFor="amount">Сумма</SFormLabel>
-                  <SFormInput
-                    type="number"
-                    id="amount"
-                    placeholder="Введите сумму"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    required
-                    min="0.01"
-                    step="0.01"
-                    disabled={isSubmitting}
-                  />
-                </SFormGroup>
+                  <SFormGroup>
+                    <SFormLabel htmlFor="amount">Сумма</SFormLabel>
+                    <SFormInput
+                      type="number"
+                      id="amount"
+                      placeholder="Введите сумму"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      required
+                      min="0.01"
+                      step="0.01"
+                      disabled={isSubmitting}
+                    />
+                  </SFormGroup>
 
-                <SSubmitBtn type="submit" disabled={isSubmitting || !token}>
-                  {isSubmitting ? "Добавление..." : "Добавить новый расход"}
-                </SSubmitBtn>
+                  <SSubmitBtn type="submit" disabled={isSubmitting || !token}>
+                    {isSubmitting ? "Добавление..." : "Добавить новый расход"}
+                  </SSubmitBtn>
 
-                {!token && (
-                  <p
-                    style={{
-                      color: "#ff4444",
-                      fontSize: "12px",
-                      textAlign: "center",
-                      marginTop: "10px",
-                    }}
-                  >
-                    Требуется авторизация
-                  </p>
-                )}
-              </form>
-            </SNewExpenseForm>
+                  {!token && (
+                    <p
+                      style={{
+                        color: "#ff4444",
+                        fontSize: "12px",
+                        textAlign: "center",
+                        marginTop: "10px",
+                      }}
+                    >
+                      Требуется авторизация
+                    </p>
+                  )}
+                </form>
+              </SNewExpenseForm>
+            </div>
           </SRightColumn>
         </SFormsContainer>
       </SMainContainer>

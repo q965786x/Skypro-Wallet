@@ -3,8 +3,6 @@ import axios from "axios";
 const API_URL = "https://wedev-api.sky.pro/api/transactions";
 
 const handleApiError = (error) => {
-  console.error("API Error:", error.response?.status, error.response?.data);
-
   if (error.response?.status === 401) {
     throw new Error("Сессия истекла. Пожалуйста, войдите снова.");
   }
@@ -23,12 +21,12 @@ const handleApiError = (error) => {
 
   if (!error.response) {
     throw new Error(
-      "Нет соединения с сервером. Проверьте интернет-соединение."
+      "Нет соединения с сервером. Проверьте интернет-соединение.",
     );
   }
 
   throw new Error(
-    error.response?.data?.error || error.message || "Произошла ошибка"
+    error.response?.data?.error || error.message || "Произошла ошибка",
   );
 };
 
@@ -39,22 +37,19 @@ export async function fetchTransactions({ token, signal }) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      signal, // Добавляем поддержку AbortSignal
+      signal,
     });
     return response.data;
   } catch (error) {
-    // Проверяем различные способы определения отмены
-    const isCanceled = 
-      error.name === 'CanceledError' || 
-      error.name === 'AbortError' || 
-      error.code === 'ERR_CANCELED' ||
-      error.message === 'canceled' ||
+    const isCanceled =
+      error.name === "CanceledError" ||
+      error.name === "AbortError" ||
+      error.code === "ERR_CANCELED" ||
+      error.message === "canceled" ||
       axios.isCancel(error) ||
       (signal && signal.aborted);
 
     if (isCanceled) {
-      console.log("Запрос отменен");
-      // Создаем специальную ошибку отмены
       const cancelError = new Error("Запрос отменен");
       cancelError.name = "CanceledError";
       cancelError.isCanceled = true;
@@ -87,11 +82,6 @@ export async function fetchTransactionsFiltered({ token, sortBy, filterBy }) {
 // Добавление транзакции
 export async function postTransaction({ token, transaction }) {
   try {
-    console.log("Отправляю транзакцию на API:", {
-      transaction,
-      tokenLength: token?.length,
-    });
-
     const response = await axios.post(API_URL, transaction, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -99,14 +89,8 @@ export async function postTransaction({ token, transaction }) {
       },
     });
 
-    console.log("Ответ от API (добавление транзакции):", {
-      status: response.status,
-      data: response.data,
-    });
-
     return response.data;
   } catch (error) {
-    console.error("Ошибка добавления транзакции:", error);
     handleApiError(error);
   }
 }
@@ -114,7 +98,6 @@ export async function postTransaction({ token, transaction }) {
 // Редактирование транзакции
 export async function editTransaction({ token, id, transaction }) {
   try {
-    // Форматируем дату для API
     const formattedTransaction = {
       ...transaction,
       date: formatDateForAPI(transaction.date),
@@ -128,7 +111,7 @@ export async function editTransaction({ token, id, transaction }) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -161,7 +144,7 @@ export async function fetchTransactionsByPeriod({ token, start, end }) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "",
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -169,13 +152,13 @@ export async function fetchTransactionsByPeriod({ token, start, end }) {
   }
 }
 
-// Вспомогательная функция для форматирования даты
+// Функция для форматирования даты
 function formatDateForAPI(dateStr) {
   if (!dateStr) return new Date().toLocaleDateString("en-US");
 
   try {
     const date = new Date(dateStr);
-    const month = date.getMonth() + 1; // месяцы 1-12
+    const month = date.getMonth() + 1;
     const day = date.getDate();
     const year = date.getFullYear();
     return `${month}-${day}-${year}`;

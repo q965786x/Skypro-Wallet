@@ -6,8 +6,11 @@ import React, {
   useContext,
   useMemo,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { TransactionsContext } from "../../context/TransactionContext";
+import { useMobile } from "../../hooks/useMobile.js";
+import { Navigate } from "react-router-dom";
 import {
   SAnalysisContainer,
   SAnalysisTitle,
@@ -40,6 +43,13 @@ import {
 } from "./Cost.styled.js";
 
 const Cost = () => {
+  const { isMobile } = useMobile();
+
+  if (isMobile) {
+    return <Navigate to="/analysis" replace />;
+  }
+
+  const location = useLocation();
   const { token } = useAuth();
   const {
     isLoading,
@@ -47,20 +57,31 @@ const Cost = () => {
     transactions: allTransactions,
   } = useContext(TransactionsContext);
 
-  // Состояние для выбранного дня (по умолчанию сегодня)
+  const diagramsRef = useRef(null);
+
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isWeeklyView, setIsWeeklyView] = useState(true);
 
-  // Состояния для календаря
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const calendarContentRef = useRef(null);
+
+  // Эффект для обработки якорных ссылок на диаграммы
+  useEffect(() => {
+    if (location.hash === "#diagrams" && diagramsRef.current) {
+      setTimeout(() => {
+        diagramsRef.current.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      window.history.replaceState(null, null, window.location.pathname);
+    }
+  }, [location]);
 
   // Отладочный вывод
   useEffect(() => {
     console.log(
       "📊 Cost.jsx: Все транзакций из контекста:",
-      allTransactions?.length
+      allTransactions?.length,
     );
   }, [allTransactions]);
 
@@ -80,12 +101,10 @@ const Cost = () => {
     "Декабрь",
   ];
 
-  // Функция для парсинга даты транзакции
   const parseTransactionDate = useCallback((dateStr) => {
     if (!dateStr) return null;
 
     try {
-      // API возвращает даты в формате "2025-12-29T00:00:00.000Z"
       return new Date(dateStr);
     } catch (error) {
       console.error("Ошибка парсинга даты:", dateStr);
@@ -120,12 +139,6 @@ const Cost = () => {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      console.log("📅 Фильтрация транзакций:", {
-        start: start.toISOString(),
-        end: end.toISOString(),
-        allTransactions: allTransactions.length,
-      });
-
       const filtered = allTransactions.filter((transaction) => {
         try {
           const transactionDate = parseTransactionDate(transaction.date);
@@ -133,21 +146,18 @@ const Cost = () => {
 
           return transactionDate >= start && transactionDate <= end;
         } catch (error) {
-          console.error("Ошибка фильтрации транзакции:", transaction, error);
           return false;
         }
       });
 
-      console.log("📅 Отфильтровано:", filtered.length, "транзакций");
       return filtered;
     },
-    [allTransactions, parseTransactionDate]
+    [allTransactions, parseTransactionDate],
   );
 
   // Получаем транзакции для выбранного периода
   const transactionsForSelectedPeriod = useMemo(() => {
     if (!selectedDay || !allTransactions || allTransactions.length === 0) {
-      console.log("📅 Нет данных для фильтрации");
       return [];
     }
 
@@ -192,17 +202,14 @@ const Cost = () => {
       Другое: "#FFB9B8",
     };
 
-    // Считаем сумму по категориям
     const categorySums = {};
 
-    // API возвращает массив транзакций напрямую
     transactionsForPeriod.forEach((transaction) => {
       const russianCategory = categoryMap[transaction.category] || "Другое";
       categorySums[russianCategory] =
         (categorySums[russianCategory] || 0) + transaction.sum;
     });
 
-    // Возвращаем все категории
     return Object.keys(categoryMap).map((key) => {
       const categoryName = categoryMap[key];
       return {
@@ -244,7 +251,6 @@ const Cost = () => {
     }
   };
 
-  // Форматирование заголовка периода
   const getPeriodTitle = () => {
     if (isWeeklyView) {
       const { monday, sunday } = getWeekRange(selectedDay);
@@ -301,41 +307,9 @@ const Cost = () => {
   const categories = calculateCategoryData(transactionsForSelectedPeriod);
   const totalAmount = categories.reduce(
     (sum, category) => sum + category.amount,
-    0
+    0,
   );
   const maxAmount = Math.max(...categories.map((c) => c.amount), 1);
-
-  // Логирование для отладки
-  useEffect(() => {
-    console.log("📊 Диаграмма данные:", {
-      selectedDay: selectedDay.toISOString(),
-      isWeeklyView,
-      allTransactionsCount: allTransactions?.length || 0,
-      filteredCount: transactionsForSelectedPeriod.length,
-      categories: categories.map((c) => `${c.name}: ${c.amount} ₽`),
-      totalAmount,
-    });
-  }, [
-    selectedDay,
-    isWeeklyView,
-    allTransactions,
-    transactionsForSelectedPeriod,
-    categories,
-    totalAmount,
-  ]);
-
-  if (isLoading) {
-    return (
-      <div className="page">
-        <SAnalysisContainer>
-          <SAnalysisTitle>Анализ расходов</SAnalysisTitle>
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            Загрузка данных...
-          </div>
-        </SAnalysisContainer>
-      </div>
-    );
-  }
 
   // Генерируем дни для отображения
   const currentMonthDays = generateMonthDays(currentYear, currentMonth);
@@ -377,10 +351,11 @@ const Cost = () => {
             display: "flex",
             gap: "10px",
             justifyContent: "space-between",
+            flexWrap: "wrap",
           }}
         >
           {/* Кнопки переключения вида */}
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => setIsWeeklyView(false)}
               style={{
@@ -392,6 +367,8 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               За день
@@ -407,12 +384,14 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               За неделю
             </button>
           </div>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => refetchTransactions()}
               style={{
@@ -424,13 +403,14 @@ const Cost = () => {
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: "500",
+                height: "38px",
+                minHeight: "38px",
               }}
             >
               Обновить данные
             </button>
             <button
               onClick={() => {
-                console.log("🔄 Принудительно синхронизирую...");
                 refetchTransactions();
               }}
               style={{
@@ -522,13 +502,13 @@ const Cost = () => {
                           const isSelected = isDaySelected(
                             currentYear,
                             currentMonth,
-                            day
+                            day,
                           );
 
                           return (
                             <SDay
                               key={`${currentYear}-${currentMonth}-${day}`}
-                              $selected={isSelected} // ТОЛЬКО isSelected, убрать $active
+                              $selected={isSelected}
                               onClick={() =>
                                 handleDayClick(day, currentMonth, currentYear)
                               }
@@ -578,13 +558,13 @@ const Cost = () => {
                           const isSelected = isDaySelected(
                             nextYear,
                             nextMonth,
-                            day
+                            day,
                           );
 
                           return (
                             <SDay
                               key={`${nextYear}-${nextMonth}-${day}`}
-                              $selected={isSelected} // ТОЛЬКО isSelected, убрать $active
+                              $selected={isSelected}
                               onClick={() =>
                                 handleDayClick(day, nextMonth, nextYear)
                               }
@@ -606,41 +586,43 @@ const Cost = () => {
 
           {/* Правая часть с диаграммами */}
           <SAnalysisRight>
-            <SDiagramSection>
-              <STotalContainer>
-                <STotalAmount>
-                  {totalAmount > 0
-                    ? totalAmount.toLocaleString("ru-RU") + " ₽"
-                    : "0 ₽"}
-                </STotalAmount>
-                <STotalPeriod>{getPeriodTitle()}</STotalPeriod>
-              </STotalContainer>
+            {/* Диаграммы с якорем */}
+            <div id="diagrams-section" ref={diagramsRef}>
+              <SDiagramSection>
+                <STotalContainer>
+                  <STotalAmount>
+                    {totalAmount > 0
+                      ? totalAmount.toLocaleString("ru-RU") + " ₽"
+                      : "0 ₽"}
+                  </STotalAmount>
+                  <STotalPeriod>{getPeriodTitle()}</STotalPeriod>
+                </STotalContainer>
 
-              {/* Шесть диаграмм в ряд */}
-              <SChartsContainer>
-                {categories.map((category) => (
-                  <SChartWrapper key={category.name}>
-                    <SChartAmount>
-                      {category.amount > 0
-                        ? category.amount.toLocaleString("ru-RU") + " ₽"
-                        : "0 ₽"}
-                    </SChartAmount>
-                    <SChartDiagram>
-                      <SChartColumn
-                        $height={
-                          maxAmount > 0
-                            ? (category.amount / maxAmount) * 100
-                            : 0
-                        }
-                        $color={category.color}
-                      />
-                    </SChartDiagram>
-                    <SChartCategory>{category.name}</SChartCategory>
-                  </SChartWrapper>
-                ))}
+                {/* Шесть диаграмм в ряд */}
+                <SChartsContainer>
+                  {categories.map((category) => (
+                    <SChartWrapper key={category.name}>
+                      <SChartAmount>
+                        {category.amount > 0
+                          ? category.amount.toLocaleString("ru-RU") + " ₽"
+                          : "0 ₽"}
+                      </SChartAmount>
+                      <SChartDiagram>
+                        <SChartColumn
+                          $height={
+                            maxAmount > 0
+                              ? (category.amount / maxAmount) * 100
+                              : 0
+                          }
+                          $color={category.color}
+                        />
+                      </SChartDiagram>
+                      <SChartCategory>{category.name}</SChartCategory>
+                    </SChartWrapper>
+                  ))}
 
-                {/* Если транзакций нет, показываем сообщение */}
-                {transactionsForSelectedPeriod.length === 0 && (
+                  {/* Если транзакций нет, показываем сообщение */}
+                  {transactionsForSelectedPeriod.length === 0 && (
                     <div
                       style={{
                         position: "absolute",
@@ -656,8 +638,9 @@ const Cost = () => {
                       Нет расходов за выбранный период
                     </div>
                   )}
-              </SChartsContainer>
-            </SDiagramSection>
+                </SChartsContainer>
+              </SDiagramSection>
+            </div>
           </SAnalysisRight>
         </SAnalysisContent>
       </SAnalysisContainer>

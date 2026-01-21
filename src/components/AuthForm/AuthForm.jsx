@@ -60,19 +60,16 @@ const AuthForm = ({ isSignUp }) => {
     const newErrors = { name: false, email: false, password: false };
     let hasError = false;
 
-    // Проверка имени только для регистрации
     if (isSignUp && !validateField("name", formData.name)) {
       newErrors.name = true;
       hasError = true;
     }
 
-    // Проверка email
     if (!validateField("email", formData.email)) {
       newErrors.email = true;
       hasError = true;
     }
 
-    // Проверка пароля
     if (!validateField("password", formData.password)) {
       newErrors.password = true;
       hasError = true;
@@ -80,7 +77,6 @@ const AuthForm = ({ isSignUp }) => {
 
     setFieldErrors(newErrors);
 
-    // Помечаем все поля как touched при попытке отправки
     setTouchedFields({
       name: true,
       email: true,
@@ -97,7 +93,6 @@ const AuthForm = ({ isSignUp }) => {
       [name]: value,
     });
 
-    // Сбрасываем ошибки для этого поля при вводе
     if (fieldErrors[name]) {
       setFieldErrors({
         ...fieldErrors,
@@ -105,7 +100,6 @@ const AuthForm = ({ isSignUp }) => {
       });
     }
 
-    // Сбрасываем общую ошибку формы
     if (formError) {
       setFormError("");
     }
@@ -115,129 +109,96 @@ const AuthForm = ({ isSignUp }) => {
     const { name } = e.target;
     const value = formData[name];
 
-    // Помечаем поле как "тронутое"
     setTouchedFields({
       ...touchedFields,
       [name]: true,
     });
 
-    // Проверяем поле, если оно не пустое
     if (value.trim()) {
       const isValid = validateField(name, value);
       if (isValid !== !fieldErrors[name]) {
-        // Инвертируем логику
         setFieldErrors({
           ...fieldErrors,
-          [name]: !isValid, // Устанавливаем true если НЕ валидно
+          [name]: !isValid,
         });
       }
     }
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (isSubmitting) return;
+    if (isSubmitting) return;
 
-  setIsSubmitting(true);
-  setFormError("");
+    setIsSubmitting(true);
+    setFormError("");
 
-  // Валидация всех полей
-  if (!validateAllFields()) {
-    setFormError(
-      "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-    );
-    setIsSubmitting(false);
-    return;
-  }
-
-  try {
-    console.log("🚀 Начинаю авторизацию...");
-
-    const data = isSignUp
-      ? await signUp({
-          name: formData.name,
-          email: formData.email, // Для signUp
-          password: formData.password
-        })
-      : await signIn({
-          login: formData.email, // ИЗМЕНЕНИЕ: используем login вместо email
-          password: formData.password
-        });
-
-        console.log("✅ Авторизация успешна, данные:", data);
-
-    // ВАЖНО: Проверяем, что данные получены корректно
-    if (data && data.user && data.token) {
-      console.log("✅ Вызываю login() с данными:", {
-        user: data.user,
-        tokenLength: data.token.length
-      });
-      
-      // Сохраняем данные через контекст
-      login(data.user, data.token);
-
-      console.log("✅ login() выполнен, переход на /expenses");
-      
-      navigate("/expenses", { replace: true });
-     
-    } else {
-      console.error("❌ Некорректные данные от сервера:", data);
-      throw new Error("Некорректные данные от сервера");
+    if (!validateAllFields()) {
+      setFormError(
+        "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку.",
+      );
+      setIsSubmitting(false);
+      return;
     }
 
-  } catch (err) {    
-    console.error("Ошибка авторизации:", err.message);
+    try {
+      const data = isSignUp
+        ? await signUp({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+          })
+        : await signIn({
+            login: formData.email,
+            password: formData.password,
+          });
 
-    setFormError(
-      err.message || "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку."
-    );
+      if (data && data.user && data.token) {
+        login(data.user, data.token);
 
-    // ВАЖНО: При ошибке входа очищаем localStorage
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    
-  } finally {
-    console.log("🏁 Завершение обработки авторизации");
-    setIsSubmitting(false);
-  }
-};
+        navigate("/expenses", { replace: true });
+      } else {
+        throw new Error("Некорректные данные от сервера");
+      }
+    } catch (err) {
+      setFormError(
+        err.message ||
+          "Упс! Введенные вами данные некорректны. Введите данные корректно и повторите попытку.",
+      );
 
-  // Проверяем, заполнено ли поле и валидно ли оно
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isFieldFilled = (fieldName) => {
     const value = formData[fieldName];
     return value.trim() !== "" && validateField(fieldName, value);
   };
 
-  // Проверяем, должно ли поле показывать ошибку
   const shouldShowError = (fieldName) => {
     if (!touchedFields[fieldName]) return false;
 
     const value = formData[fieldName];
 
-    // Для регистрации: имя обязательно, для входа - нет
     if (fieldName === "name" && !isSignUp) return false;
 
-    // Если поле пустое и было тронуто - показываем ошибку
     if (value.trim() === "") return true;
 
-    // Если поле не пустое, проверяем валидность
     return !validateField(fieldName, value);
   };
 
-  // Проверяем, есть ли ошибки в полях
   const hasFieldErrors = () => {
     return Object.values(fieldErrors).some((error) => error === true);
   };
 
   const isFormValid = () => {
-    // Если есть ошибки полей - форма невалидна
     if (hasFieldErrors()) return false;
 
-    // Если есть общая ошибка формы - форма невалидна
     if (formError) return false;
 
-    // Проверяем, что все обязательные поля заполнены и валидны
     const emailValid = validateField("email", formData.email);
     const passwordValid = validateField("password", formData.password);
     const nameValid = isSignUp ? validateField("name", formData.name) : true;
@@ -319,7 +280,6 @@ const AuthForm = ({ isSignUp }) => {
                 $fullWidth={true}
                 $disabled={!isFormValid || isSubmitting}
                 $hasError={hasFieldErrors() || formError}
-                onClick={handleSubmit}
               >
                 {isSubmitting
                   ? "Загрузка..."
