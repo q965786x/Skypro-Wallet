@@ -12,9 +12,8 @@ export const useMobile = () => {
       setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize);    
     
-    // Вызываем сразу для установки правильного состояния
     handleResize();
     
     return () => window.removeEventListener('resize', handleResize);
