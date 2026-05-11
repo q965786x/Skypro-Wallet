@@ -28,7 +28,6 @@ const TransactionProvider = ({ children }) => {
   const hasLoadedInitialData = useRef(false);
   const isMountedRef = useRef(true);
 
-  // Инициализация при монтировании
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -39,7 +38,6 @@ const TransactionProvider = ({ children }) => {
     };
   }, []);
 
-  // Функция очистки ошибки
   const clearError = useCallback(() => {
     setError("");
   }, []);
@@ -146,7 +144,6 @@ const TransactionProvider = ({ children }) => {
     }
   }, [token, isCheckingAuth, loadTransactions]);
 
-  // Создание транзакции
   const addNewTransaction = useCallback(
     async (transactionData) => {
       if (!token) {
@@ -174,7 +171,6 @@ const TransactionProvider = ({ children }) => {
     [token, loadTransactions],
   );
 
-  // Редактирование транзакции
   const updateTransaction = useCallback(
     async (id, transactionData) => {
       if (!token) {
@@ -199,7 +195,6 @@ const TransactionProvider = ({ children }) => {
     [token, loadTransactions],
   );
 
-  // Удаление транзакции
   const removeTransaction = useCallback(
     async (id) => {
       if (!token) {
@@ -219,7 +214,6 @@ const TransactionProvider = ({ children }) => {
     [token, loadTransactions],
   );
 
-  // Получение транзакций за период (для страницы анализа)
   const getTransactionsByPeriodFromAPI = useCallback(
     async (start, end) => {
       if (!token) {
@@ -238,7 +232,6 @@ const TransactionProvider = ({ children }) => {
     [token],
   );
 
-  // Вспомогательные функции
   const getTransactionsByCategory = useCallback(
     (category) => {
       return transactions.filter(

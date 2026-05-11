@@ -18,7 +18,6 @@ export const SFormWrapper = styled.div`
   }
 `;
 
-// Универсальный контейнер формы с динамической высотой
 export const SFormContainer = styled.div`
   width: 379px;
   height: ${(props) => {
@@ -53,7 +52,6 @@ export const SFormContainer = styled.div`
   }
 `;
 
-// Контейнер для контента формы с динамической высотой
 export const SFormContent = styled.div`
   width: 100%;
   height: ${(props) => {
